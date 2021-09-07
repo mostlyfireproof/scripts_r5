@@ -233,7 +233,6 @@ bool function OnWeaponAttemptOffhandSwitch_weapon_trophy_defense_system( entity 
 
 var function OnWeaponPrimaryAttack_weapon_trophy_defense_system( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
-	printf("OnWeaponPrimaryAttack_weapon_trophy_defense_system")
 	entity ownerPlayer = weapon.GetWeaponOwner()
 	Assert( ownerPlayer.IsPlayer() )
 
@@ -247,12 +246,10 @@ var function OnWeaponPrimaryAttack_weapon_trophy_defense_system( entity weapon, 
 		return 0
 
 	#if SERVER
-		printf("server stuff goes here i guess")
 		// TODO: implement all the stuff here
-		// copy + adapt code from Path ult? mp_weapon_zipline.nut line 124, 372
+		// apparently the collision is a separate model according to Sal
 
-		// maybe some new function that places it?
-
+		thread WeaponMakesDefenseSystem(weapon, model, placementInfo)
 		PlayBattleChatterLineToSpeakerAndTeam( ownerPlayer, "bc_super" )
 	#endif
 	StatusEffect_StopAllOfType( ownerPlayer, eStatusEffect.placing_trophy_system )
@@ -426,7 +423,6 @@ TrophyPlacementInfo function Trophy_GetPlacementInfo( entity player, entity prox
 
 entity function Trophy_CreateTrapPlacementProxy( asset modelName )
 {
-	printf("Trophy_CreateTrapPlacementProxy")
 	#if SERVER
 		entity proxy = CreatePropDynamic( modelName, <0,0,0>, <0,0,0> )
 	#else
@@ -444,7 +440,6 @@ entity function Trophy_CreateTrapPlacementProxy( asset modelName )
 #if CLIENT
 void function Trophy_OnBeginPlacement( entity player, int statusEffect, bool actuallyChanged )
 {
-	printf("Trophy_OnBeginPlacement")
 	if ( player != GetLocalViewPlayer() )
 		return
 
@@ -457,7 +452,6 @@ void function Trophy_OnBeginPlacement( entity player, int statusEffect, bool act
 
 void function Trophy_OnEndPlacement( entity player, int statusEffect, bool actuallyChanged )
 {
-	printf("Trophy_OnEndPlacement")
 	if ( player != GetLocalViewPlayer() )
 		return
 
@@ -468,7 +462,6 @@ void function Trophy_OnEndPlacement( entity player, int statusEffect, bool actua
 
 void function Trophy_PlacementProxy( entity player, asset model )
 {
-	printf("Trophy_PlacementProxy")
 	player.EndSignal( "Trophy_StopPlacementProxy" )
 
 	entity proxy = Trophy_CreateTrapPlacementProxy( model )
@@ -561,7 +554,22 @@ void function SCB_WattsonRechargeHint()
 
 #if SERVER
 
-// idk what goes here
+// TODO: function or something
+// If this works, it will actually place Wattson's ult.
+//
+void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacementInfo placementInfo  ) {
+	printf("Placing the ult!")
+	// i think the proxy checks for validity
+	entity trophy = CreateEntity("prop_dynamic")
+	trophy.SetModel(model)
+	trophy.kv.solid = SOLID_VPHYSICS
+	trophy.kv.CollisionGroup = TRACE_COLLISION_GROUP_BLOCK_WEAPONS | TRACE_COLLISION_GROUP_PLAYER
+
+	DispatchSpawn(trophy)
+	trophy.SetOrigin( placementInfo.origin )
+	trophy.SetAngles( placementInfo.angles )
+
+}
 
 #endif //
 
