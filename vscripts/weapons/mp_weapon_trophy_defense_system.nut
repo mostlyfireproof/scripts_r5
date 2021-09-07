@@ -120,6 +120,7 @@ struct TrophyPlacementInfo
 #if SERVER
 
 
+// I don't think anything goes here
 
 
 #endif // SERVER
@@ -151,8 +152,7 @@ function MpWeaponTrophy_Init()
 
 	#if SERVER
 
-
-
+	// I don't think anything goes here
 
 	#endif //
 
@@ -233,6 +233,7 @@ bool function OnWeaponAttemptOffhandSwitch_weapon_trophy_defense_system( entity 
 
 var function OnWeaponPrimaryAttack_weapon_trophy_defense_system( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
+	printf("OnWeaponPrimaryAttack_weapon_trophy_defense_system")
 	entity ownerPlayer = weapon.GetWeaponOwner()
 	Assert( ownerPlayer.IsPlayer() )
 
@@ -246,7 +247,13 @@ var function OnWeaponPrimaryAttack_weapon_trophy_defense_system( entity weapon, 
 		return 0
 
 	#if SERVER
+		printf("server stuff goes here i guess")
+		// TODO: implement all the stuff here
+		// copy + adapt code from Path ult? mp_weapon_zipline.nut line 124, 372
 
+		// maybe some new function that places it?
+
+		PlayBattleChatterLineToSpeakerAndTeam( ownerPlayer, "bc_super" )
 	#endif
 	StatusEffect_StopAllOfType( ownerPlayer, eStatusEffect.placing_trophy_system )
 	PlayerUsedOffhand( ownerPlayer, weapon, true, null, {pos = placementInfo.origin} )
@@ -419,6 +426,7 @@ TrophyPlacementInfo function Trophy_GetPlacementInfo( entity player, entity prox
 
 entity function Trophy_CreateTrapPlacementProxy( asset modelName )
 {
+	printf("Trophy_CreateTrapPlacementProxy")
 	#if SERVER
 		entity proxy = CreatePropDynamic( modelName, <0,0,0>, <0,0,0> )
 	#else
@@ -436,6 +444,7 @@ entity function Trophy_CreateTrapPlacementProxy( asset modelName )
 #if CLIENT
 void function Trophy_OnBeginPlacement( entity player, int statusEffect, bool actuallyChanged )
 {
+	printf("Trophy_OnBeginPlacement")
 	if ( player != GetLocalViewPlayer() )
 		return
 
@@ -448,6 +457,7 @@ void function Trophy_OnBeginPlacement( entity player, int statusEffect, bool act
 
 void function Trophy_OnEndPlacement( entity player, int statusEffect, bool actuallyChanged )
 {
+	printf("Trophy_OnEndPlacement")
 	if ( player != GetLocalViewPlayer() )
 		return
 
@@ -458,6 +468,7 @@ void function Trophy_OnEndPlacement( entity player, int statusEffect, bool actua
 
 void function Trophy_PlacementProxy( entity player, asset model )
 {
+	printf("Trophy_PlacementProxy")
 	player.EndSignal( "Trophy_StopPlacementProxy" )
 
 	entity proxy = Trophy_CreateTrapPlacementProxy( model )
@@ -549,6 +560,9 @@ void function SCB_WattsonRechargeHint()
 */
 
 #if SERVER
+
+// idk what goes here
+
 #endif //
 
 
