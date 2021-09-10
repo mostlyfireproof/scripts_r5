@@ -119,9 +119,8 @@ struct TrophyPlacementInfo
 
 #if SERVER
 
-
-// I don't think anything goes here
-
+// Throwing GC stuff here, adapted from sh_loot_creeps.gnut
+global function TrophyDefenseGarbageCollect
 
 #endif // SERVER
 
@@ -129,10 +128,14 @@ struct TrophyPlacementInfo
 struct
 {
 	#if SERVER
+	array<entity>	trophyDefenseSystems
+	int				numActiveTrophyDefenseSystems
+	float			lastTimeTrophyDefenseSystemsGarbageCollected
 	#else
 	int tacticalChargeFXHandle
 	#endif
 } file
+
 
 function MpWeaponTrophy_Init()
 {
@@ -151,8 +154,8 @@ function MpWeaponTrophy_Init()
 	PrecacheModel( TROPHY_MODEL )
 
 	#if SERVER
-
-	// I don't think anything goes here
+		// More GC stuff
+		file.lastTimeTrophyDefenseSystemsGarbageCollected = Time()
 
 	#endif //
 
@@ -576,11 +579,164 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	pylon.SetHealth( TROPHY_HEALTH_AMOUNT )
 	pylon.SetCanBeMeleed( true )
 
+	TrophyDeathSetup( pylon )
 	EmitSoundOnEntity(pylon, TROPHY_EXPAND_SOUND)
 }
 
+
+// Copied from sh_loot_creeps.gnut, sets this up to take damage and die
+void function TrophyDeathSetup( entity pylon )
+{
+	/* todo: fix this later
+	array <string> deathSounds
+	deathSounds.append( TROPHY_DESTROY_SOUND )
+	asset deathFx
+
+	switch( lootCreepType )
+	{
+		case eLootCreepType.INFECTED:
+			deathSounds.append( "Lootbin_Infected_Death" )
+			deathFx = DEATH_FX_INFECTED
+		break
+
+		case eLootCreepType.SPIDER:
+			deathSounds.append( "Lootbin_Spider_Death" )
+			deathFx = DEATH_FX_SPIDER
+		break
+
+		default:
+			Assert( 0, "Unhandled npcType" )
+	}
+
+	AddEntityCallback_OnDamaged( creep,
+		void function ( entity creep, var damageInfo ) : ( lootToSpawn, deathSounds, deathFx )
+		{
+			if ( !IsValid( creep ) )
+				return
+
+			if ( creep.e.isDisabled ) //already in the process of being killed
+				return
+
+			float damage = DamageInfo_GetDamage( damageInfo )
+			int damageSourceId = DamageInfo_GetDamageSourceIdentifier( damageInfo )
+			if ( !IsValid( damageSourceId ) )
+				return
+
+			switch( damageSourceId )
+			{
+				case eDamageSourceId.mp_weapon_frag_grenade:
+				case eDamageSourceId.mp_weapon_grenade_emp:
+					if ( damage < 40 )
+						return
+				break
+
+		}
+
+			entity attacker = DamageInfo_GetAttacker( damageInfo )
+			bool markedForDeath = false
+
+			if ( damageSourceId == eDamageSourceId.damagedef_despawn )
+				markedForDeath = true
+
+			else if ( IsValid( attacker ) && attacker.IsPlayer())
+				markedForDeath = true
+
+			if ( !markedForDeath )
+				return
+
+			//StatsHook_LootCreepKilled( creep, attacker )
+
+			creep.e.isDisabled = true
+
+			vector lootOrigin = creep.GetOrigin() + <0, 0, 16>
+			vector deathOrigin = creep.GetOrigin()
+
+
+			foreach( sound in deathSounds)
+				EmitSoundAtPosition( TEAM_ANY, lootOrigin, sound )
+
+			thread CreateAirShake( deathOrigin, 2, 50, 1 )
+			int attach_id = creep.LookupAttachment( "CHESTFOCUS" )
+			vector effectOrigin = creep.GetAttachmentOrigin( attach_id )
+			vector effectAngles = creep.GetAttachmentAngles( attach_id )
+			StartParticleEffectOnEntity( creep, GetParticleSystemIndex( deathFx ), FX_PATTACH_POINT_FOLLOW, attach_id )
+			creep.Hide()
+			creep.NotSolid()
+			thread CreepDestroyAfterDelay( creep )
+
+			foreach( ref in lootToSpawn )
+			{
+				if ( ref == "blank" )
+					continue
+
+				vector randFwd = RandomVecInDome( <0, 0, 1> ) * 1.2 //RandomVecInDomeWithFOV( <0, 0, 1>, 45 ) * 1.2
+				vector up = creep.GetUpVector()
+				randFwd = Normalize( randFwd + ( up * 0.35 ) )
+
+				LootData lootData = SURVIVAL_Loot_GetLootDataByRef( ref )
+				int amount = lootData.countPerDrop
+
+
+				printt(FUNC_NAME(), "throwing", lootOrigin, randFwd, ref, amount)
+				SURVIVAL_ThrowLootFromPoint( lootOrigin, randFwd, ref, amount )
+			}
+		}
+	)
+	*/
+}
+
+
+
 #endif //
 
+// GARBAGE COLLECTION
+#if SERVER
+void function TrophyDefenseGarbageCollect()
+{
+	print("Garbage collecting the pylons!")
+	foreach( pp in file.trophyDefenseSystems )
+	{
+		if ( !IsValid( pp ) )
+		{
+			file.trophyDefenseSystems.fastremovebyvalue( pp )
+			continue
+		}
+
+	if ( ShouldGarbageCollectTrophy( pp ) )
+		{
+			file.trophyDefenseSystems.fastremovebyvalue( pp )
+			pp.Destroy()
+		}
+	}
+
+	file.numActiveTrophyDefenseSystems = file.trophyDefenseSystems.len()
+	file.lastTimeTrophyDefenseSystemsGarbageCollected = Time()
+}
+
+bool function ShouldGarbageCollectTrophy( entity trophy )
+{
+	print("Checking to see if this is a valid target to GC")
+	/* i am way too tired to implement this
+	vector origin = trophy.GetOrigin()
+
+	if ( !SURVIVAL_PosInsideDeathField( origin ) )
+		return true
+
+	//no players nearby?
+	const float maxDistSqr = 4000 * 4000
+	bool playerNearby = false
+	foreach( guy in GetPlayerArray_AliveConnected() )
+	{
+		float distanceSqr = Distance2DSqr( guy.GetOrigin(), origin )
+		if ( distanceSqr < maxDistSqr )
+			return false
+	}
+
+	return true
+	*/
+	return false
+}
+#endif
 
 #if CLIENT
 void function Trophy_OnWeaponStatusUpdate( entity player, var rui, int slot )
