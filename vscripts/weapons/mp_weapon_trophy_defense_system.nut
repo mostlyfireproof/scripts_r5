@@ -247,6 +247,7 @@ var function OnWeaponPrimaryAttack_weapon_trophy_defense_system( entity weapon, 
 
 	#if SERVER
 		// TODO: implement all the stuff here
+		// TODO: limit placement to TROPHY_MAX_COUNT, use dirty bomb code?
 		// apparently the collision is a separate model according to Sal
 
 		thread WeaponMakesDefenseSystem(weapon, model, placementInfo)
@@ -553,22 +554,29 @@ void function SCB_WattsonRechargeHint()
 */
 
 #if SERVER
-
+/*
 // TODO: function or something
-// If this works, it will actually place Wattson's ult.
-//
+ If this works, it will actually place Wattson's ult.
+ Places to look:
+  *** sh_loot_creeps.gnut ***
+  * MDLSpawner_SpawnModel
+  * CreateCarePackageAirdrop in sh_care_package
+  * zipline
+  * jumppad, gas trap, gibby bubble
+*/
 void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacementInfo placementInfo  ) {
-	printf("Placing the ult!")
-	// i think the proxy checks for validity
-	entity trophy = CreateEntity("prop_dynamic")
-	trophy.SetModel(model)
-	trophy.kv.solid = SOLID_VPHYSICS
-	trophy.kv.CollisionGroup = TRACE_COLLISION_GROUP_BLOCK_WEAPONS | TRACE_COLLISION_GROUP_PLAYER
+	printf("Placing the pylon!")
 
-	DispatchSpawn(trophy)
-	trophy.SetOrigin( placementInfo.origin )
-	trophy.SetAngles( placementInfo.angles )
+	// realms cause it to crash on loading the map
+	//	trophy.RemoveFromAllRealms()
+	//	trophy.AddToOtherEntitysRealms( weapon )
+	entity pylon = CreatePropDynamic(model, placementInfo.origin, placementInfo.angles, 6)
 
+	pylon.SetMaxHealth( TROPHY_HEALTH_AMOUNT )
+	pylon.SetHealth( TROPHY_HEALTH_AMOUNT )
+	pylon.SetCanBeMeleed( true )
+
+	EmitSoundOnEntity(pylon, TROPHY_EXPAND_SOUND)
 }
 
 #endif //
