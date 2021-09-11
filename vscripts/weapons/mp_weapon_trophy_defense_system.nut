@@ -99,6 +99,10 @@ const int TROPHY_MAX_COUNT = 1
 const float TROPHY_REMINDER_TRIGGER_RADIUS = 300.0
 const float TROPHY_REMINDER_TRIGGER_DBOUNCE = 30.0
 
+// Animations
+const string IDLE_CLOSED = "prop_trophy_idle_closed"
+const string SPEEN = "prop_trophy_idle_closed" 			// need to figure out what the heck this is
+
 // Debug
 const bool TROPHY_DEBUG_DRAW = false
 const bool TROPHY_DEBUG_DRAW_PLACEMENT = false
@@ -435,7 +439,7 @@ entity function Trophy_CreateTrapPlacementProxy( asset modelName )
 	proxy.EnableRenderAlways()
 	proxy.kv.rendermode = 3
 	proxy.kv.renderamt = 1
-	proxy.Anim_PlayOnly( "prop_trophy_idle_closed" )
+	proxy.Anim_PlayOnly( IDLE_CLOSED )
 	proxy.Hide()
 
 	return proxy
@@ -581,40 +585,28 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 
 	TrophyDeathSetup( pylon )
 	EmitSoundOnEntity(pylon, TROPHY_EXPAND_SOUND)
+	thread PlayAnim( pylon, SPEEN )
 }
 
 
 // Copied from sh_loot_creeps.gnut, sets this up to take damage and die
 void function TrophyDeathSetup( entity pylon )
 {
-	/* todo: fix this later
+	// todo: fix this later
+
 	array <string> deathSounds
 	deathSounds.append( TROPHY_DESTROY_SOUND )
-	asset deathFx
+	asset deathFx = TROPHY_DESTROY_FX
 
-	switch( lootCreepType )
-	{
-		case eLootCreepType.INFECTED:
-			deathSounds.append( "Lootbin_Infected_Death" )
-			deathFx = DEATH_FX_INFECTED
-		break
+	array<string> lootToSpawn // adding this in to hopefully prevent crashes while working
 
-		case eLootCreepType.SPIDER:
-			deathSounds.append( "Lootbin_Spider_Death" )
-			deathFx = DEATH_FX_SPIDER
-		break
-
-		default:
-			Assert( 0, "Unhandled npcType" )
-	}
-
-	AddEntityCallback_OnDamaged( creep,
-		void function ( entity creep, var damageInfo ) : ( lootToSpawn, deathSounds, deathFx )
+	AddEntityCallback_OnDamaged( pylon,
+		void function ( entity pylon, var damageInfo ) : ( lootToSpawn, deathSounds, deathFx )
 		{
-			if ( !IsValid( creep ) )
+			if ( !IsValid( pylon ) )
 				return
 
-			if ( creep.e.isDisabled ) //already in the process of being killed
+			if ( pylon.e.isDisabled ) //already in the process of being killed
 				return
 
 			float damage = DamageInfo_GetDamage( damageInfo )
@@ -635,6 +627,7 @@ void function TrophyDeathSetup( entity pylon )
 			entity attacker = DamageInfo_GetAttacker( damageInfo )
 			bool markedForDeath = false
 
+			// the heck is marked for death
 			if ( damageSourceId == eDamageSourceId.damagedef_despawn )
 				markedForDeath = true
 
@@ -644,47 +637,24 @@ void function TrophyDeathSetup( entity pylon )
 			if ( !markedForDeath )
 				return
 
-			//StatsHook_LootCreepKilled( creep, attacker )
-
-			creep.e.isDisabled = true
-
-			vector lootOrigin = creep.GetOrigin() + <0, 0, 16>
-			vector deathOrigin = creep.GetOrigin()
-
+			pylon.e.isDisabled = true
 
 			foreach( sound in deathSounds)
-				EmitSoundAtPosition( TEAM_ANY, lootOrigin, sound )
+				EmitSoundAtPosition( TEAM_ANY, pylon.GetOrigin(), sound )
 
-			thread CreateAirShake( deathOrigin, 2, 50, 1 )
-			int attach_id = creep.LookupAttachment( "CHESTFOCUS" )
-			vector effectOrigin = creep.GetAttachmentOrigin( attach_id )
-			vector effectAngles = creep.GetAttachmentAngles( attach_id )
-			StartParticleEffectOnEntity( creep, GetParticleSystemIndex( deathFx ), FX_PATTACH_POINT_FOLLOW, attach_id )
-			creep.Hide()
-			creep.NotSolid()
-			thread CreepDestroyAfterDelay( creep )
+			thread CreateAirShake( pylon.GetOrigin(), 2, 50, 1 )
+			int attach_id = pylon.LookupAttachment( "REF" )
+			vector effectOrigin = pylon.GetAttachmentOrigin( attach_id )
+			vector effectAngles = pylon.GetAttachmentAngles( attach_id )
+			StartParticleEffectOnEntity( pylon, GetParticleSystemIndex( deathFx ), FX_PATTACH_POINT_FOLLOW, attach_id )
+			pylon.Hide()
+			pylon.NotSolid()
+			pylon.Destroy()
 
-			foreach( ref in lootToSpawn )
-			{
-				if ( ref == "blank" )
-					continue
-
-				vector randFwd = RandomVecInDome( <0, 0, 1> ) * 1.2 //RandomVecInDomeWithFOV( <0, 0, 1>, 45 ) * 1.2
-				vector up = creep.GetUpVector()
-				randFwd = Normalize( randFwd + ( up * 0.35 ) )
-
-				LootData lootData = SURVIVAL_Loot_GetLootDataByRef( ref )
-				int amount = lootData.countPerDrop
-
-
-				printt(FUNC_NAME(), "throwing", lootOrigin, randFwd, ref, amount)
-				SURVIVAL_ThrowLootFromPoint( lootOrigin, randFwd, ref, amount )
-			}
 		}
 	)
-	*/
-}
 
+}
 
 
 #endif //
