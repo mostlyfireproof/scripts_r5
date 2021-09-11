@@ -101,7 +101,7 @@ const float TROPHY_REMINDER_TRIGGER_DBOUNCE = 30.0
 
 // Animations
 const string IDLE_CLOSED = "prop_trophy_idle_closed"
-const string SPEEN = "prop_trophy_idle_closed" 			// need to figure out what the heck this is
+const string SPEEN = "prop_trophy_idle_open_spin" 			// need to figure out what the heck this is
 
 // Debug
 const bool TROPHY_DEBUG_DRAW = false
@@ -577,7 +577,11 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	// realms cause it to crash on loading the map
 	//	trophy.RemoveFromAllRealms()
 	//	trophy.AddToOtherEntitysRealms( weapon )
-	entity pylon = CreatePropDynamic(model, placementInfo.origin, placementInfo.angles, 6)
+
+	vector origin = <placementInfo.origin.x, placementInfo.origin.y, placementInfo.origin.z + 10>
+	vector angles = <-90, placementInfo.angles.y, placementInfo.angles.z>
+
+	entity pylon = CreatePropDynamic(model, origin, angles, 6)
 
 	pylon.SetMaxHealth( TROPHY_HEALTH_AMOUNT )
 	pylon.SetHealth( TROPHY_HEALTH_AMOUNT )
