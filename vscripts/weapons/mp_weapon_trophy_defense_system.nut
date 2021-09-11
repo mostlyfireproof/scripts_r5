@@ -99,9 +99,12 @@ const int TROPHY_MAX_COUNT = 1
 const float TROPHY_REMINDER_TRIGGER_RADIUS = 300.0
 const float TROPHY_REMINDER_TRIGGER_DBOUNCE = 30.0
 
-// Animations
+// Animations, thanks @r-ex!
+const string CLOSE = "prop_trophy_close"
+const string EXPAND = "prop_trophy_expand"				// for placing
 const string IDLE_CLOSED = "prop_trophy_idle_closed"
-const string SPEEN = "prop_trophy_idle_closed" 			// need to figure out what the heck this is
+const string IDLE_OPEN = "prop_trophy_idle_open"		// actually makes it spin like in retail
+const string SPIN = "prop_trophy_idle_open_spin"		// slow spin
 
 // Debug
 const bool TROPHY_DEBUG_DRAW = false
@@ -577,6 +580,7 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	// realms cause it to crash on loading the map
 	//	trophy.RemoveFromAllRealms()
 	//	trophy.AddToOtherEntitysRealms( weapon )
+
 	entity pylon = CreatePropDynamic(model, placementInfo.origin, placementInfo.angles, 6)
 
 	pylon.SetMaxHealth( TROPHY_HEALTH_AMOUNT )
@@ -585,7 +589,16 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 
 	TrophyDeathSetup( pylon )
 	EmitSoundOnEntity(pylon, TROPHY_EXPAND_SOUND)
-	thread PlayAnim( pylon, SPEEN )
+
+	waitthread PlayAnim( pylon, EXPAND )
+	ActiveTrophyDefense( pylon )
+
+}
+
+// Intercepts projectiles, charges shields, and plays the animations / sounds
+// CURRENTLY ONLY SPINS
+void function ActiveTrophyDefense( entity pylon ) {
+	thread PlayAnim( pylon, IDLE_OPEN )
 }
 
 
@@ -655,8 +668,6 @@ void function TrophyDeathSetup( entity pylon )
 	)
 
 }
-
-
 #endif //
 
 // GARBAGE COLLECTION
