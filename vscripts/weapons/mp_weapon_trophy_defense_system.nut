@@ -569,10 +569,11 @@ void function SCB_WattsonRechargeHint()
  If this works, it will actually place Wattson's ult.
  Places to look:
   *** sh_loot_creeps.gnut ***
+  *** _jump_pad.gnut ***
   * MDLSpawner_SpawnModel
   * CreateCarePackageAirdrop in sh_care_package
   * zipline
-  * jumppad, gas trap, gibby bubble
+  * gas trap, gibby bubble
 */
 void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacementInfo placementInfo  ) {
 	printf("Placing the pylon!")
