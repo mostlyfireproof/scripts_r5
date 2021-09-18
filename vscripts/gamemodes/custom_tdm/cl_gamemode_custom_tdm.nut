@@ -19,6 +19,8 @@ struct {
 
 void function Cl_CustomTDM_Init()
 {
+  RegisterConCommandTriggeredCallback( "+attack", OnAttack )
+  RegisterConCommandTriggeredCallback( "+melee", OnAttack )
 }
 
 void function Cl_RegisterLocation(LocationSettings locationSettings)
@@ -39,15 +41,15 @@ void function MakeScoreRUI()
     UISize screenSize = GetScreenSize()
     var screenAlignmentTopo = RuiTopology_CreatePlane( <( screenSize.width * 0.25),( screenSize.height * 0.31 ), 0>, <float( screenSize.width ), 0, 0>, <0, float( screenSize.height ), 0>, false )
     var rui = RuiCreate( $"ui/announcement_quick_right.rpak", screenAlignmentTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 1 )
-    
+
     RuiSetGameTime( rui, "startTime", Time() )
     RuiSetString( rui, "messageText", "Team IMC: 0  ||  Team MIL: 0" )
     RuiSetString( rui, "messageSubText", "Text 2")
     RuiSetFloat( rui, "duration", 9999999 )
     RuiSetFloat3( rui, "eventColor", SrgbToLinear( <128, 188, 255> ) )
-	
+
     file.scoreRui = rui
-    
+
     OnThreadEnd(
 		function() : ( rui )
 		{
@@ -55,7 +57,7 @@ void function MakeScoreRUI()
 			file.scoreRui = null
 		}
 	)
-    
+
     WaitForever()
 }
 
@@ -81,7 +83,7 @@ void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
         }
         case eTDMAnnounce.MAP_FLYOVER:
         {
-            
+
             if(file.locationSettings.len())
                 message = file.selectedLocation.name
             break
@@ -107,17 +109,17 @@ void function ServerCallback_TDM_DoLocationIntroCutscene_Body()
     float desiredSpawnSpeed = Deathmatch_GetIntroSpawnSpeed()
     float desiredSpawnDuration = Deathmatch_GetIntroCutsceneSpawnDuration()
     float desireNoSpawns = Deathmatch_GetIntroCutsceneNumSpawns()
-    
+
 
     entity player = GetLocalClientPlayer()
-    
+
     if(!IsValid(player)) return
-    
+
 
     EmitSoundOnEntity( player, "music_skyway_04_smartpistolrun" )
-     
+
     float playerFOV = player.GetFOV()
-    
+
     entity camera = CreateClientSidePointCamera(file.selectedLocation.spawns[0].origin + file.selectedLocation.cinematicCameraOffset, <90, 90, 0>, 17)
     camera.SetFOV(90)
 
@@ -155,8 +157,8 @@ void function ServerCallback_TDM_DoLocationIntroCutscene_Body()
 
     FadeOutSoundOnEntity( player, "music_skyway_04_smartpistolrun", 1 )
     camera.Destroy()
-    
-    
+
+
 }
 
 void function ServerCallback_TDM_SetSelectedLocation(int sel)
@@ -181,4 +183,9 @@ var function CreateTemporarySpawnRUI(entity parentEnt, float duration)
     wait duration
 
     parentEnt.Destroy()
+}
+
+void function OnAttack(entity player) {
+  printl("Attack")
+  GetLocalViewPlayer().ClientCommand( "place" )
 }
