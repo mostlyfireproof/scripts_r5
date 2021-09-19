@@ -20,6 +20,8 @@ struct {
 void function Cl_CustomTDM_Init()
 {
   RegisterConCommandTriggeredCallback( "+attack", OnAttack )
+  RegisterConCommandTriggeredCallback( "weaponSelectPrimary0", OnUp )
+	RegisterConCommandTriggeredCallback( "weaponSelectPrimary1", OnDown )
   RegisterConCommandTriggeredCallback( "+melee", OnAttack )
 }
 
@@ -188,4 +190,14 @@ var function CreateTemporarySpawnRUI(entity parentEnt, float duration)
 void function OnAttack(entity player) {
   printl("Attack")
   GetLocalViewPlayer().ClientCommand( "place" )
+}
+
+void function OnUp(entity player) {
+  printl("Up")
+  GetLocalViewPlayer().ClientCommand( "moveUp" )
+}
+
+void function OnDown(entity player) {
+  printl("Down")
+  GetLocalViewPlayer().ClientCommand( "moveDown" )
 }

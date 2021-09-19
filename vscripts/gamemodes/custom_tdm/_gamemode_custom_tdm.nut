@@ -21,8 +21,9 @@ struct {
     entity bubbleBoundary
 		entity currentEditor = null
 		entity latestModification = null
-		asset currentModel = $"mdl/thunderdome/thunderdome_cage_floor_128x128_01.rmdl"
-	  string currentModelName = "mdl/thunderdome/thunderdome_cage_floor_128x128_01.rmdl"
+		float offsetZ = 0
+		asset currentModel = $"mdl/error.rmdl"
+	  string currentModelName = "mdl/error.rmdl"
 } file;
 
 
@@ -35,7 +36,11 @@ void function _CustomTDM_Init()
     AddClientCommandCallback("next_round", ClientCommand_NextRound)
 		AddClientCommandCallback("editor", ClientCommand_Editor)
 		AddClientCommandCallback("model", ClientCommand_Model)
+		AddClientCommandCallback("cache", ClientCommand_Cache)
 		AddClientCommandCallback("place", OnAttack)
+		AddClientCommandCallback("tp", ClientCommand_TP)
+		AddClientCommandCallback("moveUp", ClientCommand_UP)
+		AddClientCommandCallback("moveDown", ClientCommand_DOWN)
 		if( CMD_GetTGiveEnabled() )
     {
         AddClientCommandCallback("tgive", ClientCommand_GiveWeapon)
@@ -50,6 +55,23 @@ void function _CustomTDM_Init()
     }
 
 		PrecacheModel(file.currentModel)
+		int index = 0
+		foreach(as in GetAssets()) {
+			printl("Index: " + index.tostring())
+			PrecacheModel(as)
+			index++
+		}
+}
+
+bool function ClientCommand_TP(entity player, array<string> args) {
+	if (args.len() > 3) return false
+
+	int x = args[0].tointeger()
+	int y = args[1].tointeger()
+	int z = args[2].tointeger()
+
+	player.SetOrigin(<x, y, z>)
+	return true
 }
 
 void function _RegisterLocation(LocationSettings locationSettings)
@@ -231,9 +253,23 @@ bool function ClientCommand_NextRound(entity player, array<string> args)
     return true
 }
 
+bool function ClientCommand_UP(entity player, array<string> args)
+{
+    file.offsetZ += 2
+    return true
+}
+
+bool function ClientCommand_DOWN(entity player, array<string> args)
+{
+    file.offsetZ -= 2
+    return true
+}
+
 bool function ClientCommand_Editor(entity player, array<string> args) {
 	if (file.currentEditor != null) {
 		file.currentEditor = null
+		file.latestModification.Destroy()
+		file.latestModification = null
 		return true
 	}
 	file.currentEditor = player
@@ -246,8 +282,23 @@ bool function ClientCommand_Model(entity player, array<string> args) {
 		return false
 	}
 
-	/*string modelName = args[0]
-  file.currentModel = GetAssetFromString("" + modelName)*/
+	try {
+		string modelName = args[0]
+	  file.currentModel = CastStringToAsset(modelName)
+		file.currentModelName = modelName
+  } catch (error) {
+		printl(error)
+	}
+	return true
+}
+
+bool function ClientCommand_Cache(entity player, array<string> args) {
+	if (args.len() < 1) {
+		return false
+	}
+
+	string modelName = args[0]
+	PrecacheModel(CastStringToAsset(modelName))
 	return true
 }
 
@@ -530,7 +581,7 @@ void function MonitorBubbleBoundary(entity bubbleShield, vector bubbleCenter, fl
             if(Distance(player.GetOrigin(), bubbleCenter) > bubbleRadius)
             {
 				Remote_CallFunction_Replay( player, "ServerCallback_PlayerTookDamage", 0, 0, 0, 0, DF_BYPASS_SHIELD | DF_DOOMED_HEALTH_LOSS, eDamageSourceId.deathField, null )
-                player.TakeDamage( int( Deathmatch_GetOOBDamagePercent() / 100 * float( player.GetMaxHealth() ) ), null, null, { scriptType = DF_BYPASS_SHIELD | DF_DOOMED_HEALTH_LOSS, damageSourceId = eDamageSourceId.deathField } )
+                //player.TakeDamage( int( Deathmatch_GetOOBDamagePercent() / 100 * float( player.GetMaxHealth() ) ), null, null, { scriptType = DF_BYPASS_SHIELD | DF_DOOMED_HEALTH_LOSS, damageSourceId = eDamageSourceId.deathField } )
             }
         }
         wait 1
@@ -628,20 +679,26 @@ void function SpawnFakeModelAtCrosshair(entity editor, asset model) {
 	}
 
 	vector origin = GetPlayerCrosshairOrigin(editor)
+	//origin.z += file.offsetZ
 	vector rotation = editor.GetAngles()
-	file.latestModification = CreatePropDynamic(model, origin, rotation)
+	file.latestModification = CreatePropDynamic(model, origin + <0.0, 0.0, file.offsetZ>, rotation)
 }
 
 void function CreatePermenantModel(entity editor) {
 	entity model = file.latestModification
+	vector pos = model.GetOrigin()
+	vector angle = model.GetAngles()
+
+	string positionSerialized = pos.x.tostring() + "," + pos.y.tostring() + "," + pos.z.tostring()
+	string anglesSerialized = angle.x.tostring() + "," + angle.y.tostring() + "," + angle.z.tostring()
+	string modelSerialized = file.currentModelName + ";" + positionSerialized + ";" + anglesSerialized
+
+	printl(modelSerialized)
+
+	CreateFRProp(file.currentModel, pos, angle, true, 10000)
+
+	file.latestModification.Destroy()
 	file.latestModification = null
-
-	/*string positionSerialized = model.GetOrigin().x "," + model.GetOrigin().y + "," + model.GetOrigin().z
-	string anglesSerialized = model.GetAngles().x "," + model.GetAngles().y + "," + model.GetAngles().z
-	string modelSerialized = currentModelName + ";" + positionSerialized + ";" + anglesSerialized
-
-	printl(modelSerialized)*/
-
 }
 
 void function TpPlayerToSpawnPoint(entity player)
@@ -662,4 +719,17 @@ bool function OnAttack(entity player, array<string> args) {
 		return true
 	}
 	return false
+}
+
+entity function CreateFRProp(asset a, vector pos, vector ang, bool mantle = false, float fade = 2000)
+{
+
+	entity e = CreatePropDynamic(a,pos,ang,SOLID_VPHYSICS,15000)
+	e.kv.fadedist = fade
+	if(mantle) e.AllowMantle()
+	return e
+}
+
+asset function CastStringToAsset( string val ) {
+	return GetKeyValueAsAsset( {kn = val}, "kn")
 }

@@ -21,6 +21,10 @@ void function OnProjectileCollision_weapon_grenade_emp( entity projectile, vecto
 
 	projectile.GrenadeIgnite()
 
+	if (hitEnt != null) {
+		printl("MODEL: " + hitEnt.GetModelName())
+	}
+
 	#if SERVER
 		thread ArcCookSound( projectile )
 	#endif

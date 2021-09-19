@@ -92,7 +92,7 @@ WeaponData
         "ammo_min_to_fire"								"150"
         "ammo_per_shot"									"150"
         "ammo_stockpile_max"							"150"
-        "regen_ammo_refill_rate"						"10"
+        "regen_ammo_refill_rate"						"10.0"
         "regen_ammo_refill_start_delay"					"0.0"
         "ammo_no_remove_from_stockpile"					"0"
         "ammo_no_remove_from_clip"						"0"
@@ -100,10 +100,10 @@ WeaponData
 
 	SP_BASE
 	{
-		"grapple_power_required"						"0"
-		"grapple_power_use_rate"						"0"
-		"grapple_maxLength"								"1100"
-	    "grapple_maxLengthVert"							"1100"
+		"grapple_power_required"						"100"
+		"grapple_power_use_rate"						"100"
+		"grapple_maxLength"								"9999999999"
+	    "grapple_maxLengthVert"							"99999999999"
 
 	    "ammo_clip_size"								"<KEEP_DEFAULT>"
         "ammo_default_total"							"<KEEP_DEFAULT>"
