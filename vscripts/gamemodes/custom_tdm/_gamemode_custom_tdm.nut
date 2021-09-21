@@ -684,14 +684,14 @@ void function SpawnFakeModelAtCrosshair(entity editor, asset model) {
 	file.latestModification = CreatePropDynamic(model, origin + <0.0, 0.0, file.offsetZ>, rotation)
 }
 
-void function CreatePermenantModel(entity editor) {
+void function CreatePermanentModel(entity editor) {
 	entity model = file.latestModification
 	vector pos = model.GetOrigin()
 	vector angle = model.GetAngles()
 
 	string positionSerialized = pos.x.tostring() + "," + pos.y.tostring() + "," + pos.z.tostring()
 	string anglesSerialized = angle.x.tostring() + "," + angle.y.tostring() + "," + angle.z.tostring()
-	string modelSerialized = file.currentModelName + ";" + positionSerialized + ";" + anglesSerialized
+	string modelSerialized = "[editor]" + file.currentModelName + ";" + positionSerialized + ";" + anglesSerialized
 
 	printl(modelSerialized)
 
@@ -715,7 +715,7 @@ void function TpPlayerToSpawnPoint(entity player)
 
 bool function OnAttack(entity player, array<string> args) {
 	if (file.currentEditor != null) {
-		CreatePermenantModel(player)
+		CreatePermanentModel(player)
 		return true
 	}
 	return false
