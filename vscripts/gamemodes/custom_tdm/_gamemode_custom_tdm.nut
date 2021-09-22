@@ -689,6 +689,7 @@ void function SpawnFakeModelAtCrosshair(entity editor, asset model) {
     vector rotation = snapVec(rotationOG, ANGLE_SNAP)
 
 	file.latestModification = CreatePropDynamic(model, origin + <0.0, 0.0, file.offsetZ>, rotation)
+    // file.latestModification.kv.rendercolor = "50 50 200" doesn't work  :(
 }
 
 void function CreatePermanentModel(entity editor) {
