@@ -1,6 +1,9 @@
 global function _CustomTDM_Init
 global function _RegisterLocation
 
+// constants to snap objects to a grid
+const int POS_SNAP = 16
+const int ANGLE_SNAP = 45
 
 enum eTDMState
 {
@@ -217,7 +220,7 @@ void function StartRound()
         array<entity> squad = GetPlayerArrayOfTeam(team)
         //thread RespawnPlayersInDropshipAtPoint(squad, squad[0].GetOrigin(), squad[0].GetAngles())
     }
-    float endTime = Time() + GetCurrentPlaylistVarFloat("round_time", 480)
+    float endTime = Time() + GetCurrentPlaylistVarFloat("round_time", 99999)
     while( Time() <= endTime )
 	{
         if(file.tdmState == eTDMState.WINNER_DECIDED)
@@ -550,7 +553,7 @@ entity function CreateBubbleBoundary(LocationSettings location)
         bubbleRadius = Distance(spawn.origin, bubbleCenter)
     }
 
-    bubbleRadius += GetCurrentPlaylistVarFloat("bubble_radius_padding", 800)
+    bubbleRadius += GetCurrentPlaylistVarFloat("bubble_radius_padding", 99999)
 
     entity bubbleShield = CreateEntity( "prop_dynamic" )
 	bubbleShield.SetValueForModelKey( BUBBLE_BUNKER_SHIELD_COLLISION_MODEL )
@@ -678,16 +681,24 @@ void function SpawnFakeModelAtCrosshair(entity editor, asset model) {
 		file.latestModification.Destroy()
 	}
 
-	vector origin = GetPlayerCrosshairOrigin(editor)
+	vector originOG = GetPlayerCrosshairOrigin(editor)
 	//origin.z += file.offsetZ
-	vector rotation = editor.GetAngles()
+	vector rotationOG = editor.GetAngles()
+
+    vector origin = snapVec(originOG, POS_SNAP)
+    vector rotation = snapVec(rotationOG, ANGLE_SNAP)
+
 	file.latestModification = CreatePropDynamic(model, origin + <0.0, 0.0, file.offsetZ>, rotation)
 }
 
 void function CreatePermanentModel(entity editor) {
-	entity model = file.latestModification
-	vector pos = model.GetOrigin()
-	vector angle = model.GetAngles()
+    // Modified to be able to snap by default to position and angle
+    entity model = file.latestModification
+    vector posOG = model.GetOrigin()
+	vector angleOG = model.GetAngles()
+
+	vector pos = snapVec(posOG, POS_SNAP)
+	vector angle = snapVec(angleOG, ANGLE_SNAP)
 
 	string positionSerialized = pos.x.tostring() + "," + pos.y.tostring() + "," + pos.z.tostring()
 	string anglesSerialized = angle.x.tostring() + "," + angle.y.tostring() + "," + angle.z.tostring()
@@ -732,4 +743,18 @@ entity function CreateFRProp(asset a, vector pos, vector ang, bool mantle = fals
 
 asset function CastStringToAsset( string val ) {
 	return GetKeyValueAsAsset( {kn = val}, "kn")
+}
+
+// Snaps a number to the nearest size
+int function snapTo( float f, int size ) {
+    return ((f / size).tointeger()) * size
+}
+
+// Snaps a vector to the grid of size
+vector function snapVec( vector vec, int size  ) {
+    int x = snapTo(vec.x, size)
+    int y = snapTo(vec.y, size)
+    int z = snapTo(vec.z, size)
+
+    return <x,y,z>
 }
