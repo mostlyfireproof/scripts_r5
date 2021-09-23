@@ -111,6 +111,11 @@ bool function ClientCommand_Editor(entity player, array<string> args) {
 		file.currentEditor = null
 		file.latestModification.Destroy()
 		file.latestModification = null
+
+        foreach (mod in file.entityModifications) {
+            mod.Destroy()
+            file.entityModifications.clear()
+        }
 		return true
 	}
 	file.currentEditor = player
