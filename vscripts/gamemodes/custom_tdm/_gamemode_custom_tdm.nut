@@ -32,20 +32,15 @@ struct {
 
 void function _CustomTDM_Init()
 {
-
     AddCallback_OnClientConnected( void function(entity player) { thread _OnPlayerConnected(player) } )
-    AddCallback_OnPlayerKilled(void function(entity victim, entity attacker, var damageInfo) {thread _OnPlayerDied(victim, attacker, damageInfo)})
 
-    //AddClientCommandCallback("next_round", ClientCommand_NextRound)
-		AddClientCommandCallback("editor", ClientCommand_Editor)
-		AddClientCommandCallback("model", ClientCommand_Model)
-	//	AddClientCommandCallback("cache", ClientCommand_Cache)
-		AddClientCommandCallback("place", OnAttack)
-	//	AddClientCommandCallback("tp", ClientCommand_TP)
-		AddClientCommandCallback("moveUp", ClientCommand_UP)
-		AddClientCommandCallback("moveDown", ClientCommand_DOWN)
-		if( CMD_GetTGiveEnabled() )
-    {
+    AddClientCommandCallback("editor", ClientCommand_Editor)
+    AddClientCommandCallback("model", ClientCommand_Model)
+    AddClientCommandCallback("place", OnAttack)
+    AddClientCommandCallback("moveUp", ClientCommand_UP)
+    AddClientCommandCallback("moveDown", ClientCommand_DOWN)
+
+    if( CMD_GetTGiveEnabled() ) {
         AddClientCommandCallback("tgive", ClientCommand_GiveWeapon)
     }
 
