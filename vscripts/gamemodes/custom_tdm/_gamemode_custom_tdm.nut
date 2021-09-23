@@ -242,6 +242,7 @@ void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
 {
     DecideRespawnPlayer(victim, true)
     TpPlayerToSpawnPoint(victim)
+    victim.UnfreezeControlsOnServer();
 }
 
 entity function CreateBubbleBoundary(LocationSettings location)
