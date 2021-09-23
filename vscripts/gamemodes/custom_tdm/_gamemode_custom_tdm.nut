@@ -22,11 +22,11 @@ struct {
     array<string> whitelistedWeapons
 
     entity bubbleBoundary
-		entity currentEditor = null
-		entity latestModification = null
-		float offsetZ = 0
-		asset currentModel = $"mdl/error.rmdl"
-	  string currentModelName = "mdl/error.rmdl"
+    entity currentEditor = null
+    entity latestModification = null
+    float offsetZ = 0
+    asset currentModel = $"mdl/error.rmdl"
+    string currentModelName = "mdl/error.rmdl"
 } file;
 
 
@@ -37,6 +37,8 @@ void function _CustomTDM_Init()
 
     AddClientCommandCallback("editor", ClientCommand_Editor)
     AddClientCommandCallback("model", ClientCommand_Model)
+
+    // Client side callbacks
     AddClientCommandCallback("place", OnAttack)
     AddClientCommandCallback("moveUp", ClientCommand_UP)
     AddClientCommandCallback("moveDown", ClientCommand_DOWN)
@@ -80,7 +82,7 @@ LocPair function _GetVotingLocation()
             return NewLocPair(<-6252, -16500, 3296>, <0, 0, 0>)
         case "mp_rr_desertlands_64k_x_64k":
         case "mp_rr_desertlands_64k_x_64k_nx":
-                return NewLocPair(<1763, 5463, -3145>, <5, -95, 0>)
+            return NewLocPair(<1763, 5463, -3145>, <5, -95, 0>)
         default:
             Assert(false, "No voting location for the map!")
     }
@@ -103,110 +105,6 @@ void function DestroyPlayerProps()
     file.playerSpawnedProps.clear()
 }
 
-
-
-void function VotingPhase()
-{
-    DestroyPlayerProps();
-    SetGameState(eGameState.MapVoting)
-
-    //Reset scores
-    GameRules_SetTeamScore(TEAM_IMC, 0)
-    GameRules_SetTeamScore(TEAM_MILITIA, 0)
-
-    foreach(player in GetPlayerArray())
-    {
-        if(!IsValid(player)) continue;
-        //_HandleRespawn(player)
-        MakeInvincible(player)
-		HolsterAndDisableWeapons( player )
-        player.ForceStand()
-        Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_DoAnnouncement", 2, eTDMAnnounce.VOTING_PHASE)
-        TpPlayerToSpawnPoint(player)
-        player.UnfreezeControlsOnServer();
-    }
-    wait Deathmatch_GetVotingTime()
-    int choice = RandomIntRangeInclusive(0, file.locationSettings.len() - 1)
-
-    file.selectedLocation = file.locationSettings[choice]
-
-    foreach(player in GetPlayerArray())
-    {
-        Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_SetSelectedLocation", choice)
-    }
-}
-
-void function StartRound()
-{
-    SetGameState(eGameState.Playing)
-
-    foreach(player in GetPlayerArray())
-    {
-        if(IsValid(player))
-        {
-            thread ScreenFadeToFromBlack(player)
-            AddCinematicFlag(player, CE_FLAG_HIDE_MAIN_HUD | CE_FLAG_INTRO)
-            player.FreezeControlsOnServer()
-        }
-
-    }
-    wait 1
-    foreach(player in GetPlayerArray())
-    {
-        if(IsValid(player))
-            Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_DoLocationIntroCutscene")
-
-    }
-
-
-    foreach(player in GetPlayerArray())
-    {
-        if(IsValid(player))
-            Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_DoAnnouncement", 4, eTDMAnnounce.MAP_FLYOVER)
-    }
-    wait Deathmatch_GetIntroCutsceneSpawnDuration() * Deathmatch_GetIntroCutsceneNumSpawns()
-
-
-    foreach(player in GetPlayerArray())
-    {
-        if( IsValid( player ) )
-        {
-            thread ScreenFadeFromBlack(player, 0.5, 0.5)
-            RemoveCinematicFlag(player, CE_FLAG_HIDE_MAIN_HUD | CE_FLAG_INTRO)
-
-            Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_DoAnnouncement", 5, eTDMAnnounce.ROUND_START)
-            ClearInvincible(player)
-            DeployAndEnableWeapons(player)
-            player.UnforceStand()
-            player.UnfreezeControlsOnServer()
-            TpPlayerToSpawnPoint(player)
-
-            //AddPlayerMovementEventCallback(player, ePlayerMovementEvents.TOUCH_GROUND, _HandleRespawnOnLand)
-        }
-
-    }
-
-
-    file.bubbleBoundary = CreateBubbleBoundary(file.selectedLocation)
-
-    foreach(team, v in GetPlayerTeamCountTable())
-    {
-        array<entity> squad = GetPlayerArrayOfTeam(team)
-        //thread RespawnPlayersInDropshipAtPoint(squad, squad[0].GetOrigin(), squad[0].GetAngles())
-    }
-    float endTime = Time() + GetCurrentPlaylistVarFloat("round_time", 99999)
-    while( Time() <= endTime )
-	{
-        if(file.tdmState == eTDMState.WINNER_DECIDED)
-            break
-		WaitFrame()
-	}
-    file.tdmState = eTDMState.IN_PROGRESS
-
-    file.bubbleBoundary.Destroy()
-
-}
-
 void function ScreenFadeToFromBlack(entity player, float fadeTime = 1, float holdTime = 1)
 {
     if( IsValid( player ) )
@@ -214,13 +112,6 @@ void function ScreenFadeToFromBlack(entity player, float fadeTime = 1, float hol
     wait fadeTime
     if( IsValid( player ) )
         ScreenFadeFromBlack(player, fadeTime / 2, holdTime / 2)
-}
-
-bool function ClientCommand_NextRound(entity player, array<string> args)
-{
-    if( !IsServer() ) return false;
-    file.tdmState = eTDMState.WINNER_DECIDED
-    return true
 }
 
 bool function ClientCommand_UP(entity player, array<string> args)
@@ -349,7 +240,7 @@ void function _OnPlayerConnected(entity player)
 
 void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
 {
-    DecideRespawnPlayer(player, true)
+    DecideRespawnPlayer(victim, true)
     TpPlayerToSpawnPoint()
 }
 
