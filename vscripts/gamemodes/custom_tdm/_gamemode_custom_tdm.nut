@@ -284,7 +284,7 @@ array<entity> function deserialize(string serialized) {
     foreach(section in sections) {
         index++
 
-        bool isModelSection = section.startswith(section, "m:")
+        bool isModelSection = section.find("m:") != null
         
         if (isModelSection) {
             string payload = StringReplace(section, "m:", "")
