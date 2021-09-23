@@ -452,4 +452,14 @@ string function serialize() {
 
 }
 
-arra
+array<string> deserialize() {
+
+}
+
+bool function ClientCommand_Compile(entity player, array<string> args) {
+    return true
+}
+
+bool function ClientCommand_Load(entity player, array<string> args) {
+    return true
+}
