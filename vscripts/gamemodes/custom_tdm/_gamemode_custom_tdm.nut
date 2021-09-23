@@ -33,6 +33,7 @@ struct {
 void function _CustomTDM_Init()
 {
     AddCallback_OnClientConnected( void function(entity player) { thread _OnPlayerConnected(player) } )
+    AddCallback_OnPlayerKilled(void function(entity victim, entity attacker, var damageInfo) {thread _OnPlayerDied(victim, attacker, damageInfo)})
 
     AddClientCommandCallback("editor", ClientCommand_Editor)
     AddClientCommandCallback("model", ClientCommand_Model)
@@ -368,75 +369,10 @@ void function _OnPlayerConnected(entity player)
     TpPlayerToSpawnPoint(player)
 }
 
-
-
-
 void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
 {
-
-
-    switch(GetGameState())
-    {
-    case eGameState.Playing:
-
-        // What happens to victim
-        void functionref() victimHandleFunc = void function() : (victim, attacker, damageInfo) {
-
-            if(!IsValid(victim)) return
-
-
-            victim.p.storedWeapons = StoreWeapons(victim)
-
-            if(Spectator_GetReplayIsEnabled() && IsValid(victim) && ShouldSetObserverTarget( attacker ))
-            {
-                victim.SetObserverTarget( attacker )
-                victim.SetSpecReplayDelay( Spectator_GetReplayDelay() )
-                victim.StartObserverMode( OBS_MODE_IN_EYE )
-                Remote_CallFunction_NonReplay(victim, "ServerCallback_KillReplayHud_Activate")
-            }
-
-            wait Deathmatch_GetRespawnDelay()
-
-
-
-            if(IsValid(victim) )
-            {
-                //_HandleRespawn( victim )
-            }
-
-        }
-
-
-        // What happens to attacker
-        void functionref() attackerHandleFunc = void function() : (victim, attacker, damageInfo)  {
-            if(IsValid(attacker) && attacker.IsPlayer() && IsAlive(attacker) && attacker != victim)
-            {
-                int score = GameRules_GetTeamScore(attacker.GetTeam());
-                score++;
-                GameRules_SetTeamScore(attacker.GetTeam(), score);
-                if(score >= SCORE_GOAL_TO_WIN)
-                {
-                    foreach( entity player in GetPlayerArray() )
-                    {
-                        thread EmitSoundOnEntityOnlyToPlayer( player, player, "diag_ap_aiNotify_winnerFound" )
-                    }
-                    file.tdmState = eTDMState.WINNER_DECIDED
-                }
-                PlayerRestoreHP(attacker, 100, Equipment_GetDefaultShieldHP())
-            }
-        }
-
-        thread victimHandleFunc()
-        thread attackerHandleFunc()
-        //Tell each player to update their Score RUI
-        foreach(player in GetPlayerArray())
-        {
-            Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_PlayerKilled")
-        }
-        break
-    default:
-
-    }
+    DecideRespawnPlayer(player, true)
+    TpPlayerToSpawnPoint()
 }
 
 entity function CreateBubbleBoundary(LocationSettings location)
