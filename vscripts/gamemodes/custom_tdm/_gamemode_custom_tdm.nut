@@ -292,7 +292,11 @@ array<entity> function deserialize(string serialized) {
             array<string> payloadSections = split(section, ";")
 
             if (payloadSections.len() < 3) {
-                printl("Problem with loading model: Less than 3 payloadSections " + payloadSections)
+                printl("Problem with loading model: Less than 3 payloadSections ")
+                foreach(psec in payloadSections) {
+                    printl(psec)
+                }
+                continue
             }
 
             string modelName = payloadSections[0]
