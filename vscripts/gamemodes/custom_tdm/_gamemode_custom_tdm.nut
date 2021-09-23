@@ -284,9 +284,9 @@ array<entity> function deserialize(string serialized) {
     foreach(section in sections) {
         index++
 
-        bool isModelSection = section.find("m:") != null
+        //bool isModelSection = section.find("m:")
         
-        if (isModelSection) {
+        if (true) {
             string payload = StringReplace(section, "m:", "")
 
             array<string> payloadSections = split(section, ";")
