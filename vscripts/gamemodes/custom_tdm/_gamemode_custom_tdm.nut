@@ -41,22 +41,12 @@ void function _CustomTDM_Init()
     AddClientCommandCallback("moveUp", ClientCommand_UP)
     AddClientCommandCallback("moveDown", ClientCommand_DOWN)
 
-    if( CMD_GetTGiveEnabled() ) {
-        AddClientCommandCallback("tgive", ClientCommand_GiveWeapon)
-    }
-
-    thread RunTDM()
-
-    // Whitelisted weapons
-    for(int i = 0; GetCurrentPlaylistVarString("whitelisted_weapon_" + i.tostring(), "~~none~~") != "~~none~~"; i++)
-    {
-        file.whitelistedWeapons.append(GetCurrentPlaylistVarString("whitelisted_weapon_" + i.tostring(), "~~none~~"))
-    }
+    //thread RunTDM()
 
     PrecacheModel(file.currentModel)
     int index = 0
     foreach(as in GetAssets()) {
-        printl("Index: " + index.tostring())
+        //printl("Index: " + index.tostring())
         PrecacheModel(as)
         index++
     }
@@ -101,18 +91,6 @@ void function _OnPropDynamicSpawned(entity prop)
 {
     file.playerSpawnedProps.append(prop)
 
-}
-void function RunTDM()
-{
-    WaitForGameState(eGameState.Playing)
-    AddSpawnCallback("prop_dynamic", _OnPropDynamicSpawned)
-
-    for(; ; )
-    {
-        VotingPhase();
-        StartRound();
-    }
-    WaitForever()
 }
 
 void function DestroyPlayerProps()
