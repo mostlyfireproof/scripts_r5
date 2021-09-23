@@ -243,6 +243,7 @@ void function _OnPlayerConnected(entity player)
     TpPlayerToSpawnPoint(player)
     player.UnfreezeControlsOnServer();
     player.ForceStand()
+    DecideRespawnPlayer(player, true)
 }
 
 void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
@@ -396,9 +397,10 @@ void function CreatePermanentModel(entity editor) {
 
 	printl("[editor] " + modelSerialized)
 
-	CreateFRProp(file.currentModel, pos, angle, true, 10000)
+	entity result = CreateFRProp(file.currentModel, pos, angle, true, 10000)
 
     file.modifications.append(modelSerialized)
+    file.entityModifications.append(result)
 
 	file.latestModification.Destroy()
 	file.latestModification = null
@@ -425,7 +427,6 @@ bool function OnAttack(entity player, array<string> args) {
 
 entity function CreateFRProp(asset a, vector pos, vector ang, bool mantle = false, float fade = 2000)
 {
-
 	entity e = CreatePropDynamic(a,pos,ang,SOLID_VPHYSICS,15000)
 	e.kv.fadedist = fade
 	if(mantle) e.AllowMantle()
