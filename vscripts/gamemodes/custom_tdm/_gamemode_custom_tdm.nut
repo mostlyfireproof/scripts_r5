@@ -25,6 +25,7 @@ struct {
     entity currentEditor = null
     entity latestModification = null
     array<string> modifications = []
+    array<entity> entityModifications = []
 
     float offsetZ = 0
     asset currentModel = $"mdl/error.rmdl"
@@ -241,6 +242,7 @@ void function _OnPlayerConnected(entity player)
 
     TpPlayerToSpawnPoint(player)
     player.UnfreezeControlsOnServer();
+    player.ForceStand()
 }
 
 void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
