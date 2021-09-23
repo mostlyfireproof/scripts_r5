@@ -225,7 +225,7 @@ bool function OnAttack(entity player, array<string> args) {
 	return false
 }
 
-bool function OnDestroy(entity player, array<string> args) {
+bool function OnADS(entity player, array<string> args) {
 	if (file.currentEditor != null) {
 		TraceResults res = TraceLine(player.GetOrigin(), GetPlayerCrosshairOrigin(player), player)
         printl(file.entityModifications.contains(res.hitEnt))
