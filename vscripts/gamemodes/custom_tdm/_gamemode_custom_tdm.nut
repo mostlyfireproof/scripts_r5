@@ -108,18 +108,21 @@ bool function ClientCommand_DOWN(entity player, array<string> args)
 
 bool function ClientCommand_Editor(entity player, array<string> args) {
 	if (file.currentEditor != null) {
+        printl("Exiting Editor")
 		file.currentEditor = null
 		file.latestModification.Destroy()
 		file.latestModification = null
 
         foreach (mod in file.entityModifications) {
+            printl("Removing mod")
             mod.Destroy()
-            file.entityModifications.clear()
         }
+        file.entityModifications.clear()
 		return true
 	}
 	file.currentEditor = player
 	thread StartEditorTask()
+    printl("Started Editing")
 	return true
 }
 
