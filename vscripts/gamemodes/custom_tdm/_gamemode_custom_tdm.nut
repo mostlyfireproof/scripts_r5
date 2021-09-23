@@ -452,7 +452,7 @@ string function serialize() {
 
 }
 
-array<string> deserialize() {
+array<string> function deserialize() {
 
 }
 
