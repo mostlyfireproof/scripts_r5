@@ -229,7 +229,7 @@ bool function OnADS(entity player, array<string> args) {
 	if (file.currentEditor != null) {
         vector origin = GetPlayerCrosshairOrigin(player)
 		TraceResults res = TraceLine(player.GetOrigin(), origin + <1, 1, 1>, player)
-        printl(file.entityModifications.contains(res.hitEnt))
+        printl(res.hitEnt.GetModelName())
 
         if (file.entityModifications.contains(res.hitEnt)) {
             file.entityModifications.removebyvalue( res.hitEnt )
