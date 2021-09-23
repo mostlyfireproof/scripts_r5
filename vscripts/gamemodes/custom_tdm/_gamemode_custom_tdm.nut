@@ -227,7 +227,7 @@ bool function OnAttack(entity player, array<string> args) {
 
 bool function OnADS(entity player, array<string> args) {
 	if (file.currentEditor != null) {
-        vector origin = clone GetPlayerCrosshairOrigin(player)
+        vector origin = GetPlayerCrosshairOrigin(player)
 		TraceResults res = TraceLine(player.GetOrigin(), origin + <1, 1, 1>, player)
         printl(file.entityModifications.contains(res.hitEnt))
 
