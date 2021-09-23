@@ -242,7 +242,7 @@ void function _OnPlayerConnected(entity player)
 
     TpPlayerToSpawnPoint(player)
     player.UnfreezeControlsOnServer();
-    player.ForceStand()
+    //player.ForceStand()
     DecideRespawnPlayer(player, true)
 }
 
