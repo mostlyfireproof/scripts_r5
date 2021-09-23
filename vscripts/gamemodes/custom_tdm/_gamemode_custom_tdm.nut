@@ -227,8 +227,10 @@ bool function OnAttack(entity player, array<string> args) {
 
 bool function OnADS(entity player, array<string> args) {
 	if (file.currentEditor != null) {
-		TraceResults res = TraceLine(player.GetOrigin(), GetPlayerCrosshairOrigin(player), player)
+        vector origin = clone GetPlayerCrosshairOrigin(player)
+		TraceResults res = TraceLine(player.GetOrigin(), origin + <1, 1, 1>, player)
         printl(file.entityModifications.contains(res.hitEnt))
+
         if (file.entityModifications.contains(res.hitEnt)) {
             file.entityModifications.removebyvalue( res.hitEnt )
             res.hitEnt.Destroy()
