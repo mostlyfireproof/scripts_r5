@@ -24,6 +24,8 @@ struct {
     entity bubbleBoundary
     entity currentEditor = null
     entity latestModification = null
+    array<string> modifications = []
+
     float offsetZ = 0
     asset currentModel = $"mdl/error.rmdl"
     string currentModelName = "mdl/error.rmdl"
@@ -37,6 +39,8 @@ void function _CustomTDM_Init()
 
     AddClientCommandCallback("editor", ClientCommand_Editor)
     AddClientCommandCallback("model", ClientCommand_Model)
+    AddClientCommandCallback("compile", ClientCommand_Compile)
+    AddClientCommandCallback("load", ClientCommand_Load)
 
     // Client side callbacks
     AddClientCommandCallback("place", OnAttack)
@@ -385,11 +389,13 @@ void function CreatePermanentModel(entity editor) {
 
 	string positionSerialized = pos.x.tostring() + "," + pos.y.tostring() + "," + pos.z.tostring()
 	string anglesSerialized = angle.x.tostring() + "," + angle.y.tostring() + "," + angle.z.tostring()
-	string modelSerialized = "[editor]" + file.currentModelName + ";" + positionSerialized + ";" + anglesSerialized
+	string modelSerialized = file.currentModelName + ";" + positionSerialized + ";" + anglesSerialized
 
-	printl(modelSerialized)
+	printl("[editor] " + modelSerialized)
 
 	CreateFRProp(file.currentModel, pos, angle, true, 10000)
+
+    file.modifications.append(modelSerialized)
 
 	file.latestModification.Destroy()
 	file.latestModification = null
@@ -440,3 +446,9 @@ vector function snapVec( vector vec, int size  ) {
 
     return <x,y,z>
 }
+
+string function serialize() {
+
+}
+
+arra
