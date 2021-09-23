@@ -240,6 +240,7 @@ void function _OnPlayerConnected(entity player)
     if(!IsValid(player)) return
 
     TpPlayerToSpawnPoint(player)
+    player.UnfreezeControlsOnServer();
 }
 
 void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
