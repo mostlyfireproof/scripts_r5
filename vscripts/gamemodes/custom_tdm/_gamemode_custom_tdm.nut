@@ -94,31 +94,6 @@ LocPair function _GetVotingLocation()
     unreachable
 }
 
-void function _OnPropDynamicSpawned(entity prop)
-{
-    file.playerSpawnedProps.append(prop)
-
-}
-
-void function DestroyPlayerProps()
-{
-    foreach(prop in file.playerSpawnedProps)
-    {
-        if(IsValid(prop))
-            prop.Destroy()
-    }
-    file.playerSpawnedProps.clear()
-}
-
-void function ScreenFadeToFromBlack(entity player, float fadeTime = 1, float holdTime = 1)
-{
-    if( IsValid( player ) )
-        ScreenFadeToBlack(player, fadeTime / 2, holdTime / 2)
-    wait fadeTime
-    if( IsValid( player ) )
-        ScreenFadeFromBlack(player, fadeTime / 2, holdTime / 2)
-}
-
 bool function ClientCommand_UP(entity player, array<string> args)
 {
     file.offsetZ += 2
@@ -168,74 +143,6 @@ bool function ClientCommand_Cache(entity player, array<string> args) {
 	return true
 }
 
-bool function ClientCommand_GiveWeapon(entity player, array<string> args)
-{
-    if(args.len() < 2) return false;
-
-    bool foundMatch = false
-
-
-    foreach(weaponName in file.whitelistedWeapons)
-    {
-        if(args[1] == weaponName)
-        {
-            foundMatch = true
-            break
-        }
-    }
-
-    if(file.whitelistedWeapons.find(args[1]) == -1 && file.whitelistedWeapons.len()) return false
-
-    entity weapon
-
-    try {
-        entity primary = player.GetNormalWeapon( WEAPON_INVENTORY_SLOT_PRIMARY_0 )
-        entity secondary = player.GetNormalWeapon( WEAPON_INVENTORY_SLOT_PRIMARY_1 )
-        entity tactical = player.GetOffhandWeapon( OFFHAND_TACTICAL )
-        entity ultimate = player.GetOffhandWeapon( OFFHAND_ULTIMATE )
-        switch(args[0])
-        {
-            case "p":
-            case "primary":
-                if( IsValid( primary ) ) player.TakeWeaponByEntNow( primary )
-                weapon = player.GiveWeapon(args[1], WEAPON_INVENTORY_SLOT_PRIMARY_0)
-                break
-            case "s":
-            case "secondary":
-                if( IsValid( secondary ) ) player.TakeWeaponByEntNow( secondary )
-                weapon = player.GiveWeapon(args[1], WEAPON_INVENTORY_SLOT_PRIMARY_1)
-                break
-            case "t":
-            case "tactical":
-                if( IsValid( tactical ) ) player.TakeOffhandWeapon( OFFHAND_TACTICAL )
-                weapon = player.GiveOffhandWeapon(args[1], OFFHAND_TACTICAL)
-                break
-            case "u":
-            case "ultimate":
-                if( IsValid( ultimate ) ) player.TakeOffhandWeapon( OFFHAND_ULTIMATE )
-                weapon = player.GiveOffhandWeapon(args[1], OFFHAND_ULTIMATE)
-                break
-        }
-    }
-    catch( e1 ) { }
-
-    if( args.len() > 2 )
-    {
-        try {
-            weapon.SetMods(args.slice(2, args.len()))
-        }
-        catch( e2 ) {
-            print(e2)
-        }
-    }
-
-    if( IsValid( weapon) && !weapon.IsWeaponOffhand() ) player.SetActiveWeaponBySlot(eActiveInventorySlot.mainHand, GetSlotForWeapon(player, weapon))
-    return true
-
-}
-
-
-
 void function _OnPlayerConnected(entity player)
 {
     if(!IsValid(player)) return
@@ -251,112 +158,6 @@ void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
     DecideRespawnPlayer(victim, true)
     TpPlayerToSpawnPoint(victim)
     victim.UnfreezeControlsOnServer();
-}
-
-entity function CreateBubbleBoundary(LocationSettings location)
-{
-    array<LocPair> spawns = location.spawns
-
-    vector bubbleCenter
-    foreach(spawn in spawns)
-    {
-        bubbleCenter += spawn.origin
-    }
-
-    bubbleCenter /= spawns.len()
-
-    float bubbleRadius = 0
-
-    foreach(LocPair spawn in spawns)
-    {
-        if(Distance(spawn.origin, bubbleCenter) > bubbleRadius)
-        bubbleRadius = Distance(spawn.origin, bubbleCenter)
-    }
-
-    bubbleRadius += GetCurrentPlaylistVarFloat("bubble_radius_padding", 99999)
-
-    entity bubbleShield = CreateEntity( "prop_dynamic" )
-	bubbleShield.SetValueForModelKey( BUBBLE_BUNKER_SHIELD_COLLISION_MODEL )
-    bubbleShield.SetOrigin(bubbleCenter)
-    bubbleShield.SetModelScale(bubbleRadius / 235)
-    bubbleShield.kv.CollisionGroup = 0
-    bubbleShield.kv.rendercolor = "127 73 37"
-    DispatchSpawn( bubbleShield )
-
-
-
-    thread MonitorBubbleBoundary(bubbleShield, bubbleCenter, bubbleRadius)
-
-
-    return bubbleShield
-
-}
-
-
-void function MonitorBubbleBoundary(entity bubbleShield, vector bubbleCenter, float bubbleRadius)
-{
-    while(IsValid(bubbleShield))
-    {
-
-        foreach(player in GetPlayerArray_Alive())
-        {
-            if(!IsValid(player)) continue
-            if(Distance(player.GetOrigin(), bubbleCenter) > bubbleRadius)
-            {
-				Remote_CallFunction_Replay( player, "ServerCallback_PlayerTookDamage", 0, 0, 0, 0, DF_BYPASS_SHIELD | DF_DOOMED_HEALTH_LOSS, eDamageSourceId.deathField, null )
-                //player.TakeDamage( int( Deathmatch_GetOOBDamagePercent() / 100 * float( player.GetMaxHealth() ) ), null, null, { scriptType = DF_BYPASS_SHIELD | DF_DOOMED_HEALTH_LOSS, damageSourceId = eDamageSourceId.deathField } )
-            }
-        }
-        wait 1
-    }
-
-}
-
-
-void function PlayerRestoreHP(entity player, float health, float shields)
-{
-    player.SetHealth( health )
-    Inventory_SetPlayerEquipment(player, "helmet_pickup_lv4_abilities", "helmet")
-
-    if(shields == 0) return;
-    else if(shields <= 50)
-        Inventory_SetPlayerEquipment(player, "armor_pickup_lv1", "armor")
-    else if(shields <= 75)
-        Inventory_SetPlayerEquipment(player, "armor_pickup_lv2", "armor")
-    else if(shields <= 100)
-        Inventory_SetPlayerEquipment(player, "armor_pickup_lv3", "armor")
-    player.SetShieldHealth( shields )
-
-}
-
-void function GrantSpawnImmunity(entity player, float duration)
-{
-    if(!IsValid(player)) return;
-    MakeInvincible(player)
-    wait duration
-    if(!IsValid(player)) return;
-    ClearInvincible(player)
-}
-
-
-vector function GetClosestEnemyToOrigin(vector origin, int ourTeam)
-{
-    float minDist = -1
-    vector enemyOrigin = <0, 0, 0>
-
-    foreach(player in GetPlayerArray_Alive())
-    {
-        if(player.GetTeam() == ourTeam) continue
-
-        float dist = Distance(player.GetOrigin(), origin)
-        if(dist < minDist || minDist < 0)
-        {
-            minDist = dist
-            enemyOrigin = player.GetOrigin()
-        }
-    }
-
-    return enemyOrigin
 }
 
 void function StartEditorTask() {
@@ -452,17 +253,81 @@ vector function snapVec( vector vec, int size  ) {
 }
 
 string function serialize() {
-    return ""
+    // Model Serializer
+    
+    string serialized = ""
+    
+    int index = 0
+    foreach (modelSerialized in file.modifications) {
+        serialized += "m:" + modelSerialized
+        if (index != (file.modifications.len() - 1)) {
+            serialized += "|"
+        }
+        index++
+    }
+    
+    return serialized
 }
 
-array<string> function deserialize() {
-    return []
+array<entity> function deserialize(string serialized) {
+    array<string> sections = split(serialized, "|")
+    array<entity> entities = []
+
+    int index = 0
+    foreach(section in sections) {
+        index++
+
+        bool isModelSection = section.startsWith("m:")
+        
+        if (isModelSection) {
+            string payload = StringReplace(section, "m:", "")
+
+            array<string> payloadSections = split(section, ";")
+
+            if (payloadSections.len() < 3) {
+                printl("Problem with loading model: Less than 3 payloadSections " + payloadSections)
+            }
+
+            string modelName = payloadSections[0]
+            vector origin = deserializeVector(payloadSections[1], "origin")
+            vector angles = deserializeVector(payloadSections[2], "angles")
+            
+            entities.append(CreateFRProp(CastStringToAsset(modelName), origin, angles))
+            printl("Loading model: " + modelName + " at " + origin + " with angle " + angles)
+        } else {
+            printl("Problem with section number " + index.tostring())
+        }
+    } 
+    return entities
+}
+
+vector function deserializeVector(string serialized, string type) {
+    array<string> axis = split(serialized, ",")
+
+    try {
+        float x = axis[0].tofloat()
+        float y = axis[1].tofloat()
+        float z = axis[2].tofloat()
+        return <x, y, z>
+    } catch(error) {
+        printl("Failed to serialize vector " + type + " " + serialized)
+        printl(error)
+        return <0, 0, 0>
+    }
 }
 
 bool function ClientCommand_Compile(entity player, array<string> args) {
+    printl("SERIALIZED: " + serialize())
     return true
 }
 
 bool function ClientCommand_Load(entity player, array<string> args) {
+    if (args.len() == 0) {
+        printl("USAGE: load <serialized code>")
+        return false
+    }
+
+    string serializedCode = args[0]
+    file.entityModifications = deserialize(serializedCode)
     return true
 }
