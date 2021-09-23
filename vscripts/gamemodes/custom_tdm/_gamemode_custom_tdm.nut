@@ -289,7 +289,7 @@ array<entity> function deserialize(string serialized) {
         if (true) {
             string payload = StringReplace(section, "m:", "")
 
-            array<string> payloadSections = split(section, ";")
+            array<string> payloadSections = split(payload, ";")
 
             if (payloadSections.len() < 3) {
                 printl("Problem with loading model: Less than 3 payloadSections ")
