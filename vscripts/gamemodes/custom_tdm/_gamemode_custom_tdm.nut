@@ -449,11 +449,11 @@ vector function snapVec( vector vec, int size  ) {
 }
 
 string function serialize() {
-
+    return ""
 }
 
 array<string> function deserialize() {
-
+    return []
 }
 
 bool function ClientCommand_Compile(entity player, array<string> args) {
