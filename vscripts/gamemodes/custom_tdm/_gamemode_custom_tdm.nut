@@ -5,23 +5,11 @@ global function _RegisterLocation
 const int POS_SNAP = 16
 const int ANGLE_SNAP = 45
 
-enum eTDMState
-{
-	IN_PROGRESS = 0
-	WINNER_DECIDED = 1
-}
-
 struct {
-    int tdmState = eTDMState.IN_PROGRESS
-    array<entity> playerSpawnedProps
     LocationSettings& selectedLocation
 
     array<LocationSettings> locationSettings
 
-
-    array<string> whitelistedWeapons
-
-    entity bubbleBoundary
     entity currentEditor = null
     entity latestModification = null
     array<string> modifications = []
@@ -45,6 +33,7 @@ void function _CustomTDM_Init()
 
     // Client side callbacks
     AddClientCommandCallback("place", OnAttack)
+    AddClientCommandCallback("destroy", OnADS)
     AddClientCommandCallback("moveUp", ClientCommand_UP)
     AddClientCommandCallback("moveDown", ClientCommand_DOWN)
 
@@ -231,6 +220,23 @@ bool function OnAttack(entity player, array<string> args) {
 		CreatePermanentModel(player)
 		return true
 	}
+
+    printl("You are not in edit mode")
+	return false
+}
+
+bool function OnDestroy(entity player, array<string> args) {
+	if (file.currentEditor != null) {
+		TraceResults res = TraceLine(player.GetOrigin(), GetPlayerCrosshairOrigin(player), player)
+        printl(file.entityModifications.contains(res.hitEnt))
+        if (file.entityModifications.contains(res.hitEnt)) {
+            file.entityModifications.removebyvalue( res.hitEnt )
+            res.hitEnt.Destroy()
+        }
+		return true
+	}
+
+    printl("You are not in edit mode")
 	return false
 }
 
@@ -337,7 +343,7 @@ bool function ClientCommand_Compile(entity player, array<string> args) {
 
 bool function ClientCommand_Load(entity player, array<string> args) {
     if (args.len() == 0) {
-        printl("USAGE: load <serialized code>")
+        printl("USAGE: load \"<serialized code>\"")
         return false
     }
 
