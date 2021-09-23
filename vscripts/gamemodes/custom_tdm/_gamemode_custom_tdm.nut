@@ -241,7 +241,7 @@ void function _OnPlayerConnected(entity player)
 void function _OnPlayerDied(entity victim, entity attacker, var damageInfo)
 {
     DecideRespawnPlayer(victim, true)
-    TpPlayerToSpawnPoint()
+    TpPlayerToSpawnPoint(victim)
 }
 
 entity function CreateBubbleBoundary(LocationSettings location)
