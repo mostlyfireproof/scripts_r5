@@ -265,6 +265,8 @@ string function serialize() {
         }
         index++
     }
+
+    printl("Serialization: " + serialized)
     
     return serialized
 }
