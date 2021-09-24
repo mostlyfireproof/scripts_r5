@@ -14,7 +14,7 @@ global enum Modification {
 struct {
     entity currentEditor = null
     entity latestModification = null
-    
+
     int latestModificationType = Modification.NONE
 
     array<string> modifications = []
@@ -417,7 +417,7 @@ void function SpawnDummyAtPlayer(entity player) {
     array<string> weapons = ["mp_weapon_vinson", "mp_weapon_mastiff", "mp_weapon_energy_shotgun", "mp_weapon_lstar"]
     string randomWeapon = weapons[RandomInt(weapons.len())]
     dummy.GiveWeapon(randomWeapon, WEAPON_INVENTORY_SLOT_ANY)
-    entityModifications.append(dummy)
+    file.entityModifications.append(dummy)
 }
 
 void function SpawnDummyAtPosition(vector origin, vector angles) {
