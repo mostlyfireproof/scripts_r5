@@ -5,9 +5,16 @@ global function _RegisterLocation
 const int POS_SNAP = 16
 const int ANGLE_SNAP = 45
 
+global enum Modification {
+    NONE = 0
+    MODEL = 1
+    POSITION = 2
+}
+
 struct {
     entity currentEditor = null
     entity latestModification = null
+    Modification latestModificationType = Modification.NONE
     array<string> modifications = []
     array<entity> entityModifications = []
     array<LocPair> spawnPoints = []
@@ -28,7 +35,6 @@ void function _CustomTDM_Init()
     AddClientCommandCallback("compile", ClientCommand_Compile)
     AddClientCommandCallback("load", ClientCommand_Load)
     AddClientCommandCallback("spawnpoint", ClientCommand_Spawnpoint)
-    AddClientCommandCallback("test", ClientCommand_Test)
 
     // Client side callbacks
     AddClientCommandCallback("place", OnAttack)
@@ -99,7 +105,9 @@ bool function ClientCommand_Spawnpoint(entity player, array<string> args) {
     vector angles = player.GetAngles()
 
     LocPair pair = NewLocPair(origin, angles)
-
+    file.spawnPoints.append(pair)
+    printl("Successfully added position " + origin + " " + angles)
+    SpawnDummyAtPlayer(player)
     return true
 }
 
@@ -282,13 +290,15 @@ string function serialize() {
     string serialized = ""
     
     int index = 0
+    bool isNext = file.spawnPoints.len() != 0
     foreach (modelSerialized in file.modifications) {
         serialized += "m:" + modelSerialized
-        if (index != (file.modifications.len() - 1)) {
+        if (isNext || index != (file.modifications.len() - 1)) {
             serialized += "|"
         }
         index++
     }
+    index = 0
     foreach(position in file.spawnPoints) {
         vector origin = position.origin 
         vector angles = position.angles
@@ -296,6 +306,11 @@ string function serialize() {
         string oSer = origin.x + "," + origin.y + "," + origin.z
         string aSer = angles.x + "," + angles.y + "," + angles.z
         serialized += "s:" + oSer + ";" + aSer
+
+        if (index != (file.spawnPoints.len() - 1)) {
+            serialized += "|"
+        }
+        index++
     }
 
     printl("Serialization: " + serialized)
@@ -303,7 +318,7 @@ string function serialize() {
     return serialized
 }
 
-array<entity> function deserialize(string serialized) {
+array<entity> function deserialize(string serialized, bool dummies) {
     array<string> sections = split(serialized, "|")
     array<entity> entities = []
 
@@ -311,9 +326,10 @@ array<entity> function deserialize(string serialized) {
     foreach(section in sections) {
         index++
 
-        //bool isModelSection = section.find("m:")
+        bool isModelSection = section.find("m:") != -1
+        bool isPositionSection = section.find("s:") != -1
         
-        if (true) {
+        if (isModelSection) {
             string payload = StringReplace(section, "m:", "")
 
             array<string> payloadSections = split(payload, ";")
@@ -332,6 +348,26 @@ array<entity> function deserialize(string serialized) {
             
             entities.append(CreateFRProp(CastStringToAsset(modelName), origin, angles))
             printl("Loading model: " + modelName + " at " + origin + " with angle " + angles)
+        } else if (isPositionSection) { 
+            string payload = StringReplace(section, "s:", "")
+
+            array<string> payloadSections = split(payload, ";")
+
+            if (payloadSections.len() < 2) {
+                printl("Problem with loading model: Less than 2 payloadSections ")
+                foreach(psec in payloadSections) {
+                    printl(psec)
+                }
+                continue
+            }
+
+            vector origin = deserializeVector(payloadSections[0], "origin")
+            vector angles = deserializeVector(payloadSections[1], "angles")
+            
+            if (dummies) {
+                entities.append(SpawnDummyAtPosition(origin, angles))
+            }
+            printl("Loading player position at " + origin + " with angle " + angles)
         } else {
             printl("Problem with section number " + index.tostring())
         }
@@ -366,17 +402,11 @@ bool function ClientCommand_Load(entity player, array<string> args) {
     }
 
     string serializedCode = args[0]
-    file.entityModifications = deserialize(serializedCode)
+    file.entityModifications = deserialize(serializedCode, true)
     return true
 }
 
-bool function ClientCommand_Test(entity player, array<string> args) {
-    printl("m:".find("m:"))
-    printl("sdajsdosiad".find("m:"))
-    return true
-}
-
-/*void function SpawnDummy(entity player) {
+void function SpawnDummyAtPlayer(entity player) {
     entity dummy = CreateDummy(99, player.GetOrigin(), player.GetAngles())
     DispatchSpawn( dummy )
 	
@@ -385,4 +415,16 @@ bool function ClientCommand_Test(entity player, array<string> args) {
     array<string> weapons = ["mp_weapon_vinson", "mp_weapon_mastiff", "mp_weapon_energy_shotgun", "mp_weapon_lstar"]
     string randomWeapon = weapons[RandomInt(weapons.len())]
     dummy.GiveWeapon(randomWeapon, WEAPON_INVENTORY_SLOT_ANY)
-}*/
+    entityModifications.append(dummy)
+}
+
+void function SpawnDummyAtPosition(vector origin, vector angles) {
+    entity dummy = CreateDummy(99, origin, angles)
+    DispatchSpawn( dummy )
+	
+    dummy.SetSkin(RandomInt(6))
+    
+    array<string> weapons = ["mp_weapon_vinson", "mp_weapon_mastiff", "mp_weapon_energy_shotgun", "mp_weapon_lstar"]
+    string randomWeapon = weapons[RandomInt(weapons.len())]
+    dummy.GiveWeapon(randomWeapon, WEAPON_INVENTORY_SLOT_ANY)
+}
