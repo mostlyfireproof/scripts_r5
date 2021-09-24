@@ -346,8 +346,9 @@ bool function MenuMapEntitiesExist()
 
 	foreach ( name in entNames )
 	{
-		if ( GetEntArrayByScriptName( name ).len() != 1 )
-			return false
+		CreateEntity(name)
+		/*if ( GetEntArrayByScriptName( name ).len() != 1 )
+			return false*/
 	}
 
 	return true
@@ -1050,12 +1051,12 @@ void function InitMenuEntities()
 
 	file.cameraTargets.clear()
 	file.cameraStartOriginsAngles.clear()
-	/*foreach ( string scriptName, int eNumIdx in eCameraTargetNames )
+	foreach ( string scriptName, int eNumIdx in eCameraTargetNames )
 	{
-		entity targetEnt = GetEntByScriptName( scriptName )
+		entity targetEnt = CreateEntity(scriptName)
 		file.cameraTargets[ eNumIdx ] <- targetEnt
 		file.cameraStartOriginsAngles[ eNumIdx ] <- { origin = targetEnt.GetOrigin(), angles = targetEnt.GetAngles() }
-	}*/
+	}
 
 	clGlobal.menuCamera = CreateClientSidePointCamera( <0, 0, 0>, <0, 0, 0>, DEFAULT_FOV )
 
@@ -1074,7 +1075,7 @@ void function InitMenuEntities()
 	entity model
 	float[2] baseRotationDelta
 
-	/*refEnt = GetEntByScriptName( "play_character_ref" )
+	refEnt = GetEntByScriptName( "play_character_ref" )
 	ModelData_SetBaseOrigin( file.playCharacter, refEnt.GetOrigin() )
 	ModelData_SetBaseAngles( file.playCharacter, refEnt.GetAngles() )
 	model = CreateMenuModel( file.playCharacter, $"mdl/dev/empty_model.rmdl" )
@@ -1103,7 +1104,7 @@ void function InitMenuEntities()
 	ItemFlavor weapon     = GetAllWeaponItemFlavors()[0]
 	ItemFlavor weaponSkin = LoadoutSlot_GetItemFlavor( localPlayerEHI, Loadout_WeaponSkin( weapon ) )
 	WeaponCosmetics_Apply( model, weaponSkin, null )
-*/
+
 	//thread DrawOrg( ModelData_GetMover( file.playCharacter ) )
 	//thread DrawOrg( ModelData_GetMover( file.customizeWeapon ) )
 
@@ -2205,8 +2206,8 @@ void function SetMenuCamera( entity player, int presentationType, bool interpola
 	player.SetMenuCameraEntityWithAudio( clGlobal.menuCamera )
 
 	int cameraTargetName = file.presentationData[ presentationType ].cameraTargetName
-	entity cameraTarget  = file.cameraTargets[ cameraTargetName ]
-	clGlobal.menuCamera.SetTarget( cameraTarget, fov, interpolate, EASING_CUBIC_INOUT, TRANSITION_DURATION )
+//	entity cameraTarget  = file.cameraTargets[ cameraTargetName ]
+//	clGlobal.menuCamera.SetTarget( cameraTarget, fov, interpolate, EASING_CUBIC_INOUT, TRANSITION_DURATION )
 
 	//EASING_LINEAR
 	//EASING_SINE_IN
