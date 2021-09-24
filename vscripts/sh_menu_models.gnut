@@ -1678,7 +1678,7 @@ void function UIToClient_PreviewModel( asset modelAsset ) {
 	entity model = CreateMenuModel(file.customizeModel, modelAsset)
 	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
 
-	ModelData_SetMover(model, mover)
+	ModelData_SetMover(file.customizeModel, mover)
 }
 
 void function UIToClient_PreviewWeaponSkin( int skinFlavorIndex, int charmFlavorIndex, bool shouldHighlightWeapon )
