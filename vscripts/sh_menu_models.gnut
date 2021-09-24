@@ -161,6 +161,7 @@ struct
 		MenuModelData playCharacter
 		MenuModelData customizeCharacter
 		MenuModelData customizeWeapon
+		MenuModelData customizeModel
 
 		int baseFXHandle = -1
 
@@ -231,6 +232,7 @@ global function UpdateMenuWithPartyMembers
 global function UIToClient_PreviewCharacterSkin
 global function UIToClient_PreviewCharacterSkinFromCharacterSkinPanel
 global function UIToClient_PreviewWeaponSkin
+global function UIToClient_PreviewModel
 global function UIToClient_ResetWeaponRotation
 global function UIToClient_PartyMemberGetFocus
 global function UIToClient_PartyMemberLoseFocus
@@ -670,7 +672,7 @@ void function InitPresentationData()
 
 	{
 		PresentationDef pd = file.presentationData[ePresentationType.WEAPON_SKIN]
-		pd.modelData = file.customizeWeapon
+		pd.modelData = file.customizeModel
 		pd.useCharacterOffsets = false
 		pd.maxYawDegrees = 80
 		pd.maxPitchDegrees = 80
@@ -866,8 +868,8 @@ void function StartPresentation_CHARACTER_QUIPS()
 
 void function StartPresentation_WEAPON_SKIN()
 {
-	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
-	entity charm       = GetCharmForWeaponEntity( weaponModel )
+	entity weaponModel = ModelData_GetModel( customizeModel )
+	//entity charm       = GetCharmForWeaponEntity( weaponModel )
 
 	weaponModel.Show()
 
@@ -882,13 +884,13 @@ void function StartPresentation_WEAPON_SKIN()
 
 void function EndPresentation_WEAPON_SKIN()
 {
-	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
-	entity weaponMover = ModelData_GetMover( file.customizeWeapon )
+	entity weaponModel = ModelData_GetModel( file.customizeModel )
+	entity weaponMover = ModelData_GetMover( file.customizeModel )
 	weaponModel.Hide()
 
-	entity charm = GetCharmForWeaponEntity( weaponModel )
+	/*entity charm = GetCharmForWeaponEntity( weaponModel )
 	if ( IsValid( charm ) )
-		charm.Hide()
+		charm.Hide()*/
 
 	bool desireWeaponCharmPresentation = file.desiredPresentationType == ePresentationType.WEAPON_CHARMS
 
@@ -900,7 +902,7 @@ void function EndPresentation_WEAPON_SKIN()
 		CameraZoomThreadEnd()
 
 		//
-		weaponMover.SetOrigin( ModelData_GetBaseOrigin( file.customizeWeapon ) )
+		weaponMover.SetOrigin( ModelData_GetBaseOrigin( file.customizeModel ) )
 
 		//
 		int cameraTargetIndex    = eCameraTargetNames.customize_weapon_camera_target
@@ -916,33 +918,33 @@ void function EndPresentation_WEAPON_SKIN()
 
 void function StartPresentation_WEAPON_CHARMS()
 {
-	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
-	entity charm       = GetCharmForWeaponEntity( weaponModel )
+	entity weaponModel = ModelData_GetModel( file.customizeModel )
+//	entity charm       = GetCharmForWeaponEntity( weaponModel )
 
 	weaponModel.Show()
 
-	if ( IsValid( charm ) )
-		charm.Show()
+//	if ( IsValid( charm ) )
+//		charm.Show()
 
 	float[2] charmBaseRotationDelta
 	charmBaseRotationDelta[0] = -30.0
 	charmBaseRotationDelta[1] = 0.0
-	ModelData_SetBaseAngles( file.customizeWeapon, <0, 140, 0> )
-	ModelData_SetBaseRotationDelta( file.customizeWeapon, charmBaseRotationDelta )
+	ModelData_SetBaseAngles( file.customizeModel, <0, 140, 0> )
+	ModelData_SetBaseRotationDelta( file.customizeModel, charmBaseRotationDelta )
 }
 
 void function EndPresentation_WEAPON_CHARMS()
 {
-	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
-	entity charm       = GetCharmForWeaponEntity( weaponModel )
+	entity weaponModel = ModelData_GetModel( file.customizeModel )
+	//entity charm       = GetCharmForWeaponEntity( weaponModel )
 
 	weaponModel.Hide()
 
-	if ( IsValid( charm ) )
-		charm.Hide()
+//	if ( IsValid( charm ) )
+//		charm.Hide()
 
-	ModelData_SetBaseAngles( file.customizeWeapon, WEAPON_BASE_ANGLES )
-	ModelData_SetBaseRotationDelta( file.customizeWeapon, WEAPON_BASE_ROTATION_DELTA )
+	ModelData_SetBaseAngles( file.customizeModel, WEAPON_BASE_ANGLES )
+	ModelData_SetBaseRotationDelta( file.customizeModel, WEAPON_BASE_ROTATION_DELTA )
 }
 
 void function StartPresentation_BATTLE_PASS()
@@ -984,12 +986,12 @@ void function EnableLobbyMenuCameraZoom()
 	}
 	else if ( file.desiredPresentationType == ePresentationType.WEAPON_SKIN )
 	{
-		ItemFlavor skinFlavor     = ModelData_GetSkinFlavor( file.customizeWeapon )
-		ItemFlavor weaponFlavor   = WeaponSkin_GetWeaponFlavor( skinFlavor )
-		ItemFlavor categoryFlavor = WeaponItemFlavor_GetCategory( weaponFlavor )
-		vector menuZoomOffset     = WeaponCategoryFlavor_GetMenuZoomOffset( categoryFlavor )
+		//ItemFlavor skinFlavor     = ModelData_GetSkinFlavor( file.customizeWeapon )
+		//ItemFlavor weaponFlavor   = WeaponSkin_GetWeaponFlavor( skinFlavor )
+		//ItemFlavor categoryFlavor = WeaponItemFlavor_GetCategory( weaponFlavor )
+		vector menuZoomOffset     = <0, 0, 0>
 
-		focalPoint = ModelData_GetMover( file.customizeWeapon ).GetOrigin() + menuZoomOffset
+		focalPoint = ModelData_GetMover( file.customizeModel ).GetOrigin() + menuZoomOffset
 
 		maxZoomDistance = ZOOM_DISTANCE_WEAPON_SKIN
 		cameraTargetIndex = eCameraTargetNames.customize_weapon_camera_target
@@ -1093,11 +1095,11 @@ void function InitMenuEntities()
 	model.SetAlive( true )
 
 	refEnt = GetEntByScriptName( "customize_weapon_ref" )
-	ModelData_SetBaseOrigin( file.customizeWeapon, refEnt.GetOrigin() )
-	ModelData_SetBaseAngles( file.customizeWeapon, WEAPON_BASE_ANGLES )
-	ModelData_SetBaseRotationDelta( file.customizeWeapon, WEAPON_BASE_ROTATION_DELTA )
-	model = CreateMenuModel( file.customizeWeapon, $"mdl/dev/empty_model.rmdl" )
-	ModelData_CreateMover( file.customizeWeapon )
+	ModelData_SetBaseOrigin( file.customizeModel, refEnt.GetOrigin() )
+	ModelData_SetBaseAngles( file.customizeModel, WEAPON_BASE_ANGLES )
+	ModelData_SetBaseRotationDelta( file.customizeModel, WEAPON_BASE_ROTATION_DELTA )
+	model = CreateMenuModel( file.customizeModel, $"mdl/dev/empty_model.rmdl" )
+	ModelData_CreateMover( file.customizeModel )
 	ItemFlavor weapon     = GetAllWeaponItemFlavors()[0]
 	ItemFlavor weaponSkin = LoadoutSlot_GetItemFlavor( localPlayerEHI, Loadout_WeaponSkin( weapon ) )
 	WeaponCosmetics_Apply( model, weaponSkin, null )
@@ -1661,9 +1663,23 @@ void function DisplayPartyMemberModelThread( PartyMemberDisplayThreadData data )
 
 void function UIToClient_ResetWeaponRotation()
 {
-	ModelData_ResetRotation( file.customizeWeapon )
+	ModelData_ResetRotation( file.customizeModel )
 }
 
+void function UIToClient_PreviewModel( asset model ) {
+	printl(file.initializedMenuModels)
+
+	if (!file.initializedMenuModels )
+		return
+	
+	vector origin = <0, 0, 0>
+	vector angles = <0, 0, 0>
+
+	entity model = CreateMenuModel(file.customizeModel, model)
+	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
+
+	ModelData_SetMover(mover)
+}
 
 void function UIToClient_PreviewWeaponSkin( int skinFlavorIndex, int charmFlavorIndex, bool shouldHighlightWeapon )
 {
@@ -1927,12 +1943,12 @@ void function ZoomOutCameraToWeaponSkin( entity model, ItemFlavor charmFlavor, e
 	file.cameraZoomData.mover.NonPhysicsMoveTo( cameraStartOrigin, CHARM_CAMERA_ZOOM_DURATION, 0.0, CHARM_CAMERA_ZOOM_DURATION * 0.25 )
 
 	//
-	mover.NonPhysicsMoveTo( ModelData_GetBaseOrigin( file.customizeWeapon ), CHARM_CAMERA_ZOOM_DURATION, 0.0, CHARM_CAMERA_ZOOM_DURATION * 0.25 )
+	mover.NonPhysicsMoveTo( ModelData_GetBaseOrigin( file.customizeModel ), CHARM_CAMERA_ZOOM_DURATION, 0.0, CHARM_CAMERA_ZOOM_DURATION * 0.25 )
 
 	//
 	//
 	//
-	thread LerpWeaponSkinScale( model, charmFlavor, model.GetModelScale(), armoryScale, mover, ModelData_GetBaseOrigin( file.customizeWeapon ), CHARM_CAMERA_ZOOM_DURATION )
+	thread LerpWeaponSkinScale( model, charmFlavor, model.GetModelScale(), armoryScale, mover, ModelData_GetBaseOrigin( file.customizeModel ), CHARM_CAMERA_ZOOM_DURATION )
 
 	wait CHARM_CAMERA_ZOOM_DURATION
 }

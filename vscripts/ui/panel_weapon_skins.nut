@@ -236,7 +236,7 @@ void function WeaponSkinsPanel_Update( var panel )// TODO: IMPLEMENT
 			entry = Loadout_WeaponCharm( file.currentWeapon )
 			pd.weaponCharmList = GetLoadoutItemsSortedForMenu( entry, WeaponCharm_GetSortOrdinal )
 			itemList = pd.weaponCharmList
-			previewFunc = PreviewWeaponCharm
+			previewFunc = PreviewModel
 			customButtonUpdateFunc = (void function( ItemFlavor charmFlav, var rui )
 			{
 				asset img = $""
@@ -288,7 +288,7 @@ void function WeaponSkinsPanel_Update( var panel )// TODO: IMPLEMENT
 			pd.weaponSkinList = GetLoadoutItemsSortedForMenu( entry, WeaponSkin_GetSortOrdinal )
 			FilterWeaponSkinList( pd.weaponSkinList )
 			itemList = pd.weaponSkinList
-			previewFunc = PreviewWeaponSkin
+			previewFunc = PreviewModel
 			confirmationFunc = null
 			ignoreDefaultItemForCount = false
 
@@ -347,6 +347,10 @@ void function PreviewWeaponSkin( ItemFlavor weaponSkinFlavor )
 	file.currentWeaponSkin = weaponSkinFlavor
 
 	RunClientScript( "UIToClient_PreviewWeaponSkin", weaponSkinId, weaponCharmId, true )
+}
+
+void function PreviewModel( ItemFlavor weaponSkinFlavor ) {
+	RunClientScript("UIToClient_PreviewModel", $"mdl/weapons/vinson/ptpov_vinson.rmdl")
 }
 
 
