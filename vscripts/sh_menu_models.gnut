@@ -1107,8 +1107,8 @@ void function InitMenuEntities()
 	//thread DrawOrg( ModelData_GetMover( file.playCharacter ) )
 	//thread DrawOrg( ModelData_GetMover( file.customizeWeapon ) )
 
-	InitBattlePassLights()
-	InitLightingConfigs()
+	//InitBattlePassLights()
+	//InitLightingConfigs()
 
 	file.initializedMenuModels = true
 }
