@@ -1074,7 +1074,7 @@ void function InitMenuEntities()
 	entity model
 	float[2] baseRotationDelta
 
-	refEnt = GetEntByScriptName( "play_character_ref" )
+	/*refEnt = GetEntByScriptName( "play_character_ref" )
 	ModelData_SetBaseOrigin( file.playCharacter, refEnt.GetOrigin() )
 	ModelData_SetBaseAngles( file.playCharacter, refEnt.GetAngles() )
 	model = CreateMenuModel( file.playCharacter, $"mdl/dev/empty_model.rmdl" )
@@ -1103,7 +1103,7 @@ void function InitMenuEntities()
 	ItemFlavor weapon     = GetAllWeaponItemFlavors()[0]
 	ItemFlavor weaponSkin = LoadoutSlot_GetItemFlavor( localPlayerEHI, Loadout_WeaponSkin( weapon ) )
 	WeaponCosmetics_Apply( model, weaponSkin, null )
-
+*/
 	//thread DrawOrg( ModelData_GetMover( file.playCharacter ) )
 	//thread DrawOrg( ModelData_GetMover( file.customizeWeapon ) )
 
