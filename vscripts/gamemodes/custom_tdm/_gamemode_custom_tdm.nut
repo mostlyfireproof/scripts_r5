@@ -37,12 +37,16 @@ void function _CustomTDM_Init()
     AddClientCommandCallback("compile", ClientCommand_Compile)
     AddClientCommandCallback("load", ClientCommand_Load)
     AddClientCommandCallback("spawnpoint", ClientCommand_Spawnpoint)
+    AddClientCommandCallback("debug", ClientCommand_Debug)
 
     // Client side callbacks
     AddClientCommandCallback("place", OnAttack)
     AddClientCommandCallback("destroy", OnADS)
     AddClientCommandCallback("moveUp", ClientCommand_UP)
     AddClientCommandCallback("moveDown", ClientCommand_DOWN)
+    AddClientCommandCallback("rotate", ClientCommand_Rotate)
+    AddClientCommandCallback("undo", ClientCommand_Undo)
+
 
     //thread RunTDM()
 
@@ -52,6 +56,18 @@ void function _CustomTDM_Init()
         //printl("Index: " + index.tostring())
         PrecacheModel(as)
         index++
+    }
+}
+
+bool function ClientCommand_Debug(entity player, array<string> args) {
+    StartLoop()
+    return true
+}
+
+void function StartLoop() {
+    for (ass in GetAssets()) {
+        file.currentModel = ass
+        wait 1
     }
 }
 
@@ -113,7 +129,7 @@ bool function ClientCommand_Spawnpoint(entity player, array<string> args) {
         SpawnDummyAtPlayer(player)
     } else {
         printl("You must be in editor mode")
-        return false
+        return
     }
     return true
 }
@@ -216,7 +232,8 @@ void function CreatePermanentModel(entity editor) {
 	string anglesSerialized = angle.x.tostring() + "," + angle.y.tostring() + "," + angle.z.tostring()
 	string modelSerialized = file.currentModelName + ";" + positionSerialized + ";" + anglesSerialized
 
-	printl("[editor] " + modelSerialized)
+	//printl("[editor] " + modelSerialized)
+    printl("[DEBUG] " + model.GetModelName())
 
 	entity result = CreateFRProp(file.currentModel, pos, angle, true, 10000)
 
@@ -263,6 +280,14 @@ bool function OnADS(entity player, array<string> args) {
 
     printl("You are not in edit mode")
 	return false
+}
+
+bool function ClientCommand_Rotate(entity player, array<string> args) {
+    return true
+}
+
+bool function ClientCommand_Undo(entity player, array<string> args) {
+    return true
 }
 
 entity function CreateFRProp(asset a, vector pos, vector ang, bool mantle = false, float fade = 2000)
@@ -434,4 +459,28 @@ void function SpawnDummyAtPosition(vector origin, vector angles) {
     array<string> weapons = ["mp_weapon_vinson", "mp_weapon_mastiff", "mp_weapon_energy_shotgun", "mp_weapon_lstar"]
     string randomWeapon = weapons[RandomInt(weapons.len())]
     dummy.GiveWeapon(randomWeapon, WEAPON_INVENTORY_SLOT_ANY)
+}
+
+TraceResults function PlayerLookingAt(entity player) {
+    vector angles = player.EyeAngles()
+	vector forward = AnglesToForward( angles )
+	vector origin = player.EyePosition()
+
+	vector start = origin
+	vector end = origin + forward * 50000
+	TraceResults result = TraceLine( start, end )
+
+	return result
+}
+
+vector function PlayerLookingAt(entity player) {
+    vector angles = player.EyeAngles()
+	vector forward = AnglesToForward( angles )
+	vector origin = player.EyePosition()
+
+	vector start = origin
+	vector end = origin + forward * 50000
+	TraceResults result = TraceLine( start, end )
+
+	return result.endPos
 }
