@@ -65,7 +65,7 @@ bool function ClientCommand_Debug(entity player, array<string> args) {
 }
 
 void function StartLoop() {
-    for (ass in GetAssets()) {
+    foreach (ass in GetAssets()) {
         file.currentModel = ass
         wait 1
     }
