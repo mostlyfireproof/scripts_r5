@@ -1,4 +1,6 @@
-global function InitMenuAttempt
+global function ServerToUI_OpenModelMenu
+
+
 struct
 {
 	var                       panel
@@ -8,6 +10,7 @@ struct
 	var miscCustomizeButton
 } file
 
-void function InitMenuAttempt( var panel )
-{
+void function ServerToUI_OpenModelMenu() {
+	printl("Opening model menu")
+	OpenModelMenu()
 }

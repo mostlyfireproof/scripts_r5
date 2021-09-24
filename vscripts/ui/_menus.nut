@@ -2483,7 +2483,7 @@ void function OpenDevMenu( var button )
 }
 #endif //R5DEV
 
-void function OpenModelMenu ( var button ) {
+void function OpenModelMenu () {
 	SetTopLevelCustomizeContext(GetAllWeaponCategories()[0])
 
 	AdvanceMenu( GetMenu( "CustomizeWeaponMenu" ) )

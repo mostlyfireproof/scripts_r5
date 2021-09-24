@@ -218,8 +218,8 @@ void function ScreenFadeToFromBlack(entity player, float fadeTime = 1, float hol
 
 bool function ClientCommand_NextRound(entity player, array<string> args)
 {
-    if( !IsServer() ) return false;
-    file.tdmState = eTDMState.WINNER_DECIDED
+    Remote_CallFunction_NonReplay(player, "ServerCallback_TDMOpenModelMenu")
+    printl("Sending TDM Open Model Menu")
     return true
 }
 

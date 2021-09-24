@@ -6,6 +6,7 @@ global function ServerCallback_TDM_DoLocationIntroCutscene
 global function ServerCallback_TDM_PlayerKilled
 
 global function Cl_RegisterLocation
+global function ServerCallback_TDMOpenModelMenu
 
 struct {
 
@@ -57,6 +58,11 @@ void function MakeScoreRUI()
 	)
     
     WaitForever()
+}
+
+void function ServerCallback_TDMOpenModelMenu() {
+    printl("Recieved TDM Open Model Menu")
+    RunUIScript()
 }
 
 void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
