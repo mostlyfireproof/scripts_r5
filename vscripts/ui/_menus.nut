@@ -152,6 +152,8 @@ global function OpenXboxHelp
 global function OpenDevMenu
 #endif // R5DEV
 
+global function OpenModelMenu
+
 struct
 {
 	array<void functionref()>                   partyUpdatedCallbacks
@@ -2480,6 +2482,12 @@ void function OpenDevMenu( var button )
 	AdvanceMenu( GetMenu( "DevMenu" ) )
 }
 #endif //R5DEV
+
+void function OpenModelMenu ( var button ) {
+	SetTopLevelCustomizeContext(GetAllWeaponCategories()[0])
+
+	AdvanceMenu( GetMenu( "CustomizeWeaponMenu" ) )
+}
 
 void function SetDialog( var menu, bool val )
 {

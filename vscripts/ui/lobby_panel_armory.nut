@@ -121,6 +121,8 @@ void function CategoryButton_OnActivate( var button )
 	ItemFlavor category = file.buttonToCategory[button]
 	SetTopLevelCustomizeContext( category )
 
+	SetTopLevelCustomizeContext(GetAllWeaponCategories()[0])
+
 	AdvanceMenu( GetMenu( "CustomizeWeaponMenu" ) )
 }
 

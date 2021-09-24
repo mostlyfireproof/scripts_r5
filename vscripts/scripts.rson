@@ -876,6 +876,12 @@ Scripts:
 	gamemodes/custom_tdm/custom_tdm_settings.nut
 ]
 
+When: "UI"
+Scripts:
+[
+	gamemodes/custom_tdm/menu_attempt.nut
+]
+
 When: "SERVER"
 Scripts:
 [
