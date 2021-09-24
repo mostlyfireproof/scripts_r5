@@ -461,7 +461,7 @@ void function SpawnDummyAtPosition(vector origin, vector angles) {
     dummy.GiveWeapon(randomWeapon, WEAPON_INVENTORY_SLOT_ANY)
 }
 
-TraceResults function PlayerLookingAt(entity player) {
+TraceResults function PlayerLookingAtRes(entity player) {
     vector angles = player.EyeAngles()
 	vector forward = AnglesToForward( angles )
 	vector origin = player.EyePosition()
@@ -473,7 +473,7 @@ TraceResults function PlayerLookingAt(entity player) {
 	return result
 }
 
-vector function PlayerLookingAt(entity player) {
+vector function PlayerLookingAtVec(entity player) {
     vector angles = player.EyeAngles()
 	vector forward = AnglesToForward( angles )
 	vector origin = player.EyePosition()
