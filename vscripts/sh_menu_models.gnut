@@ -873,8 +873,8 @@ void function StartPresentation_WEAPON_SKIN()
 
 	weaponModel.Show()
 
-	if ( IsValid( charm ) )
-		charm.Show()
+	//if ( IsValid( charm ) )
+//		charm.Show()
 
 	if ( file.previousPresentationType != ePresentationType.WEAPON_CHARMS )
 	{
