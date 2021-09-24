@@ -6,14 +6,11 @@ const int POS_SNAP = 16
 const int ANGLE_SNAP = 45
 
 struct {
-    LocationSettings& selectedLocation
-
-    array<LocationSettings> locationSettings
-
     entity currentEditor = null
     entity latestModification = null
     array<string> modifications = []
     array<entity> entityModifications = []
+    array<LocPair> spawnPoints = []
 
     float offsetZ = 0
     asset currentModel = $"mdl/error.rmdl"
@@ -30,6 +27,8 @@ void function _CustomTDM_Init()
     AddClientCommandCallback("model", ClientCommand_Model)
     AddClientCommandCallback("compile", ClientCommand_Compile)
     AddClientCommandCallback("load", ClientCommand_Load)
+    AddClientCommandCallback("spawnpoint", ClientCommand_Spawnpoint)
+    AddClientCommandCallback("test", ClientCommand_Test)
 
     // Client side callbacks
     AddClientCommandCallback("place", OnAttack)
@@ -61,7 +60,7 @@ bool function ClientCommand_TP(entity player, array<string> args) {
 
 void function _RegisterLocation(LocationSettings locationSettings)
 {
-    file.locationSettings.append(locationSettings)
+    //file.locationSettings.append(locationSettings)
 }
 
 LocPair function _GetVotingLocation()
@@ -92,6 +91,15 @@ bool function ClientCommand_UP(entity player, array<string> args)
 bool function ClientCommand_DOWN(entity player, array<string> args)
 {
     file.offsetZ -= 2
+    return true
+}
+
+bool function ClientCommand_Spawnpoint(entity player, array<string> args) {
+    vector origin = player.GetOrigin()
+    vector angles = player.GetAngles()
+
+    LocPair pair = NewLocPair(origin, angles)
+
     return true
 }
 
@@ -281,6 +289,14 @@ string function serialize() {
         }
         index++
     }
+    foreach(position in file.spawnPoints) {
+        vector origin = position.origin 
+        vector angles = position.angles
+
+        string oSer = origin.x + "," + origin.y + "," + origin.z
+        string aSer = angles.x + "," + angles.y + "," + angles.z
+        serialized += "s:" + oSer + ";" + aSer
+    }
 
     printl("Serialization: " + serialized)
     
@@ -352,4 +368,20 @@ bool function ClientCommand_Load(entity player, array<string> args) {
     string serializedCode = args[0]
     file.entityModifications = deserialize(serializedCode)
     return true
+}
+
+bool function ClientCommand_Test(entity player, array<string> args) {
+    printl(args[0].find("m:"))
+    return true
+}
+
+void function SpawnDummy(entity player) {
+    entity dummy = CreateDummy(99, player.GetOrigin(), player.GetAngles())
+    DispatchSpawn( dummy )
+	
+    dummy.SetSkin(RandomInt(6))
+    
+    array<string> weapons = ["mp_weapon_vinson", "mp_weapon_mastiff", "mp_weapon_energy_shotgun", "mp_weapon_lstar"]
+    string randomWeapon = weapons[RandomInt(weapons.len())]
+    dummy.GiveWeapon(randomWeapon, WEAPON_INVENTORY_SLOT_ANY)
 }
