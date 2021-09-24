@@ -62,7 +62,7 @@ void function MakeScoreRUI()
 
 void function ServerCallback_TDMOpenModelMenu() {
     printl("Recieved TDM Open Model Menu")
-    RunUIScript()
+    RunUIScript("ServerToUI_OpenModelMenu")
 }
 
 void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
