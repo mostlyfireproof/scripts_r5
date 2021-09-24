@@ -331,8 +331,8 @@ bool function MenuMapEntitiesExist()
 
 		"play_camera_target",
 		"play_character_ref",
-		"play_teammate1_ref",
-		"play_teammate2_ref",
+		//"play_teammate1_ref",
+		//"play_teammate2_ref",
 
 		"close_character_camera_target",
 
@@ -358,8 +358,8 @@ void function ApplyEventPositioning()
 	array<entity> ents
 	ents.append( GetEntByScriptName( "play_camera_target" ) )
 	ents.append( GetEntByScriptName( "play_character_ref" ) )
-	ents.append( GetEntByScriptName( "play_teammate1_ref" ) )
-	ents.append( GetEntByScriptName( "play_teammate2_ref" ) )
+	//ents.append( GetEntByScriptName( "play_teammate1_ref" ) )
+	//ents.append( GetEntByScriptName( "play_teammate2_ref" ) )
 
 	foreach ( ent in ents )
 		ent.SetOrigin( ent.GetOrigin() + <0, 5120, 0> )
@@ -1043,8 +1043,8 @@ void function InitMenuEntities()
 
 	InitPresentationData()
 
-	InitTeammatePosition( "play_teammate1_ref", "ACT_MP_MENU_LOBBY_LEFT_IDLE" )
-	InitTeammatePosition( "play_teammate2_ref", "ACT_MP_MENU_LOBBY_RIGHT_IDLE" )
+	//InitTeammatePosition( "play_teammate1_ref", "ACT_MP_MENU_LOBBY_LEFT_IDLE" )
+	//InitTeammatePosition( "play_teammate2_ref", "ACT_MP_MENU_LOBBY_RIGHT_IDLE" )
 
 	file.cameraZoomData.mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", <0, 0, 0>, <0, 0, 0> )
 
