@@ -14,7 +14,9 @@ global enum Modification {
 struct {
     entity currentEditor = null
     entity latestModification = null
-    Modification latestModificationType = Modification.NONE
+    
+    int latestModificationType = Modification.NONE
+
     array<string> modifications = []
     array<entity> entityModifications = []
     array<LocPair> spawnPoints = []
