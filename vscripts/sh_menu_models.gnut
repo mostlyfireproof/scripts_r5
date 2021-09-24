@@ -1666,7 +1666,7 @@ void function UIToClient_ResetWeaponRotation()
 	ModelData_ResetRotation( file.customizeModel )
 }
 
-void function UIToClient_PreviewModel( asset model ) {
+void function UIToClient_PreviewModel( asset modelAsset ) {
 	printl(file.initializedMenuModels)
 
 	if (!file.initializedMenuModels )
@@ -1675,7 +1675,7 @@ void function UIToClient_PreviewModel( asset model ) {
 	vector origin = <0, 0, 0>
 	vector angles = <0, 0, 0>
 
-	entity model = CreateMenuModel(file.customizeModel, model)
+	entity model = CreateMenuModel(file.customizeModel, modelAsset)
 	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
 
 	ModelData_SetMover(mover)
