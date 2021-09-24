@@ -1050,12 +1050,12 @@ void function InitMenuEntities()
 
 	file.cameraTargets.clear()
 	file.cameraStartOriginsAngles.clear()
-	foreach ( string scriptName, int eNumIdx in eCameraTargetNames )
+	/*foreach ( string scriptName, int eNumIdx in eCameraTargetNames )
 	{
 		entity targetEnt = GetEntByScriptName( scriptName )
 		file.cameraTargets[ eNumIdx ] <- targetEnt
 		file.cameraStartOriginsAngles[ eNumIdx ] <- { origin = targetEnt.GetOrigin(), angles = targetEnt.GetAngles() }
-	}
+	}*/
 
 	clGlobal.menuCamera = CreateClientSidePointCamera( <0, 0, 0>, <0, 0, 0>, DEFAULT_FOV )
 
