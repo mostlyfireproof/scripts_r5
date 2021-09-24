@@ -375,7 +375,7 @@ bool function ClientCommand_Test(entity player, array<string> args) {
     return true
 }
 
-void function SpawnDummy(entity player) {
+/*void function SpawnDummy(entity player) {
     entity dummy = CreateDummy(99, player.GetOrigin(), player.GetAngles())
     DispatchSpawn( dummy )
 	
@@ -384,4 +384,4 @@ void function SpawnDummy(entity player) {
     array<string> weapons = ["mp_weapon_vinson", "mp_weapon_mastiff", "mp_weapon_energy_shotgun", "mp_weapon_lstar"]
     string randomWeapon = weapons[RandomInt(weapons.len())]
     dummy.GiveWeapon(randomWeapon, WEAPON_INVENTORY_SLOT_ANY)
-}
+}*/
