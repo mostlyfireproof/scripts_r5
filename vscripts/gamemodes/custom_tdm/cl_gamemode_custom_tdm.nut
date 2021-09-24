@@ -21,6 +21,7 @@ struct {
 void function Cl_CustomTDM_Init()
 {
     RegisterSignal("EndSetPresentationType")
+    ClMenuModels_Init()
 }
 
 void function Cl_RegisterLocation(LocationSettings locationSettings)
