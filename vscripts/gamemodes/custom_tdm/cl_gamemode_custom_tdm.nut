@@ -20,6 +20,7 @@ struct {
 
 void function Cl_CustomTDM_Init()
 {
+    RegisterSignal("EndSetPresentationType")
 }
 
 void function Cl_RegisterLocation(LocationSettings locationSettings)
