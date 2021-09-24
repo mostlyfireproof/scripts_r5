@@ -60,7 +60,7 @@ void function _CustomTDM_Init()
 }
 
 bool function ClientCommand_Debug(entity player, array<string> args) {
-    StartLoop()
+    thread StartLoop()
     return true
 }
 
@@ -129,7 +129,7 @@ bool function ClientCommand_Spawnpoint(entity player, array<string> args) {
         SpawnDummyAtPlayer(player)
     } else {
         printl("You must be in editor mode")
-        return
+        return false
     }
     return true
 }
