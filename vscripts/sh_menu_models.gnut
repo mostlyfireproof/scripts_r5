@@ -868,7 +868,7 @@ void function StartPresentation_CHARACTER_QUIPS()
 
 void function StartPresentation_WEAPON_SKIN()
 {
-	entity weaponModel = ModelData_GetModel( customizeModel )
+	entity weaponModel = ModelData_GetModel( file.customizeModel )
 	//entity charm       = GetCharmForWeaponEntity( weaponModel )
 
 	weaponModel.Show()
