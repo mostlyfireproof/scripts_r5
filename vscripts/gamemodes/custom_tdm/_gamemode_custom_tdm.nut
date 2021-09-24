@@ -103,13 +103,18 @@ bool function ClientCommand_DOWN(entity player, array<string> args)
 }
 
 bool function ClientCommand_Spawnpoint(entity player, array<string> args) {
-    vector origin = player.GetOrigin()
-    vector angles = player.GetAngles()
+    if (file.currentEditor != null) {
+        vector origin = player.GetOrigin()
+        vector angles = player.GetAngles()
 
-    LocPair pair = NewLocPair(origin, angles)
-    file.spawnPoints.append(pair)
-    printl("Successfully added position " + origin + " " + angles)
-    SpawnDummyAtPlayer(player)
+        LocPair pair = NewLocPair(origin, angles)
+        file.spawnPoints.append(pair)
+        printl("Successfully added position " + origin + " " + angles)
+        SpawnDummyAtPlayer(player)
+    } else {
+        printl("You must be in editor mode")
+        return false
+    }
     return true
 }
 
