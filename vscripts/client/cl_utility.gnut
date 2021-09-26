@@ -1520,8 +1520,8 @@ bool function ShouldShowButtonHints()
 	return file.showButtonHintsInt == 1
 }
 
-entity function CreateEntity( string name ) {
-	return Entities_CreateByClassname(name)
+void function PEB_PRINT(string s) {
+	printl("UI: " + s)
 }
 
 // Set map visuals which cannot be set through level entity files

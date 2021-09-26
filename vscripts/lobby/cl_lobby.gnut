@@ -1,5 +1,11 @@
 globalize_all_functions
 
+void function Cl_Lobby_Init()
+{
+    RegisterSignal("EndSetPresentationType")
+    ClMenuModels_Init()
+}
+
 void function Lobby_AddLocalPlayer()
 {
 	entity player = GetLocalClientPlayer()

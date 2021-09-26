@@ -3,4 +3,12 @@ global function Lobby_Init
 void function Lobby_Init()
 {
   RegisterSignal( "GameStateChanged" )
+  AddClientCommandCallback("next_round", ClientCommand_NextRound) 
+}
+
+bool function ClientCommand_NextRound(entity player, array<string> args)
+{
+    Remote_CallFunction_NonReplay(player, "ServerCallback_TDMOpenModelMenu")
+    printl("Sending TDM Open Model Menu")
+    return true
 }

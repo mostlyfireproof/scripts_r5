@@ -346,9 +346,9 @@ bool function MenuMapEntitiesExist()
 
 	foreach ( name in entNames )
 	{
-		CreateEntity(name)
-		/*if ( GetEntArrayByScriptName( name ).len() != 1 )
-			return false*/
+		
+		if ( GetEntArrayByScriptName( name ).len() != 1 )
+			return false
 	}
 
 	return true
@@ -874,6 +874,8 @@ void function StartPresentation_WEAPON_SKIN()
 
 	weaponModel.Show()
 
+	printl("START PRESENTATION")
+
 	//if ( IsValid( charm ) )
 //		charm.Show()
 
@@ -888,6 +890,8 @@ void function EndPresentation_WEAPON_SKIN()
 	entity weaponModel = ModelData_GetModel( file.customizeModel )
 	entity weaponMover = ModelData_GetMover( file.customizeModel )
 	weaponModel.Hide()
+
+	printl("ENDED PRESENTATION")
 
 	/*entity charm = GetCharmForWeaponEntity( weaponModel )
 	if ( IsValid( charm ) )
@@ -1053,7 +1057,7 @@ void function InitMenuEntities()
 	file.cameraStartOriginsAngles.clear()
 	foreach ( string scriptName, int eNumIdx in eCameraTargetNames )
 	{
-		entity targetEnt = CreateEntity(scriptName)
+		entity targetEnt = GetEntByScriptName(scriptName)
 		file.cameraTargets[ eNumIdx ] <- targetEnt
 		file.cameraStartOriginsAngles[ eNumIdx ] <- { origin = targetEnt.GetOrigin(), angles = targetEnt.GetAngles() }
 	}
@@ -1673,13 +1677,25 @@ void function UIToClient_PreviewModel( asset modelAsset ) {
 	if (!file.initializedMenuModels )
 		return
 	
-	vector origin = <0, 0, 0>
-	vector angles = <0, 0, 0>
+	//vector origin = <0, 0, 0>
+	//vector angles = <0, 0, 0>
 
-	entity model = CreateMenuModel(file.customizeModel, modelAsset)
-	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
+	CreateMenuModel(file.customizeModel, modelAsset)
 
-	ModelData_SetMover(file.customizeModel, mover)
+	vector origin = clGlobal.menuCamera.GetOrigin()
+	vector modelOrigin = ModelData_GetModel(file.customizeModel).GetOrigin()
+
+	entity model = ModelData_GetModel(file.customizeModel)
+	vector skinColor = MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR
+
+	thread TransitionTest( model, skinColor / 255.0, true, true )
+
+	printl("ORIGIN OF CAMERA: " + origin + " " + modelOrigin)
+
+	//entity model = CreateMenuModel(file.customizeModel, modelAsset)
+	//entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
+
+	//ModelData_SetMover(file.customizeModel, mover)
 }
 
 void function UIToClient_PreviewWeaponSkin( int skinFlavorIndex, int charmFlavorIndex, bool shouldHighlightWeapon )
@@ -2206,8 +2222,8 @@ void function SetMenuCamera( entity player, int presentationType, bool interpola
 	player.SetMenuCameraEntityWithAudio( clGlobal.menuCamera )
 
 	int cameraTargetName = file.presentationData[ presentationType ].cameraTargetName
-//	entity cameraTarget  = file.cameraTargets[ cameraTargetName ]
-//	clGlobal.menuCamera.SetTarget( cameraTarget, fov, interpolate, EASING_CUBIC_INOUT, TRANSITION_DURATION )
+	entity cameraTarget  = file.cameraTargets[ cameraTargetName ]
+	clGlobal.menuCamera.SetTarget( cameraTarget, fov, interpolate, EASING_CUBIC_INOUT, TRANSITION_DURATION )
 
 	//EASING_LINEAR
 	//EASING_SINE_IN

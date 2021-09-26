@@ -350,7 +350,19 @@ void function PreviewWeaponSkin( ItemFlavor weaponSkinFlavor )
 }
 
 void function PreviewModel( ItemFlavor weaponSkinFlavor ) {
-	RunClientScript("UIToClient_PreviewModel", $"mdl/weapons/vinson/ptpov_vinson.rmdl")
+	array<asset> arr = [
+		$"mdl/error.rmdl",
+		$"mdl/Gibs/Glass_shard02.rmdl",
+		$"mdl/weapons/grenades/w_thermite_grenade_projectile.rmdl",
+		$"mdl/weapons/vinson/ptpov_vinson.rmdl"
+	]
+
+	printl("HELLO " + arr[RandomInt(arr.len())])
+	printl("HELLO2 " + arr[RandomInt(arr.len())])
+	printl("HELLO3 " + arr[RandomInt(arr.len())])
+	printl("HELLO4 " + arr[RandomInt(arr.len())])
+
+	RunClientScript("UIToClient_PreviewModel", arr[RandomInt(arr.len())])
 }
 
 
