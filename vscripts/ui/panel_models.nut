@@ -1,6 +1,5 @@
-global function InitWeaponSkinsPanel
-global function WeaponSkinsPanel_SetWeapon
-global function WeaponSkinsPanel_SetModels
+global function InitModelsPanel
+global function ModelsPanel_SetModels
 
 struct PanelData
 {
@@ -24,7 +23,7 @@ struct
 } file
 
 
-void function InitWeaponSkinsPanel( var panel )
+void function InitModelsPanel( var panel )
 {
 	Assert( !(panel in file.panelDataMap) )
 	PanelData pd
@@ -39,9 +38,9 @@ void function InitWeaponSkinsPanel( var panel )
 
 	AddUICallback_InputModeChanged( OnInputModeChanged )
 
-	AddPanelEventHandler( panel, eUIEvent.PANEL_SHOW, WeaponSkinsPanel_OnShow )
-	AddPanelEventHandler( panel, eUIEvent.PANEL_HIDE, WeaponSkinsPanel_OnHide )
-	AddPanelEventHandler_FocusChanged( panel, WeaponSkinsPanel_OnFocusChanged )
+	AddPanelEventHandler( panel, eUIEvent.PANEL_SHOW, ModelsPanel_OnShow )
+	AddPanelEventHandler( panel, eUIEvent.PANEL_HIDE, ModelsPanel_OnHide )
+	AddPanelEventHandler_FocusChanged( panel, ModelsPanel_OnFocusChanged )
 
 	AddPanelFooterOption( panel, LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK" )
 	AddPanelFooterOption( panel, LEFT, BUTTON_A, false, "#A_BUTTON_SELECT", "", null, CustomizeModelMenus_IsFocusedItem )
@@ -106,43 +105,35 @@ void function OnInputModeChanged( bool controllerModeActive )
 {
 }
 
-
-void function WeaponSkinsPanel_SetWeapon( var panel, ItemFlavor ornull weaponFlavOrNull )
+void function ModelsPanel_OnShow( var panel )
 {
-	/*PanelData pd = file.panelDataMap[panel]
-	pd.weaponOrNull = weaponFlavOrNull*/
-}
-
-
-void function WeaponSkinsPanel_OnShow( var panel )
-{
-	printl("WeaponSkinsPanel: OnShow")
+	printl("ModelsPanel: OnShow")
 	RunClientScript( "EnableModelTurn" )
 
 	file.currentPanel = panel
 
 	// (dw): Customize context is already being used for the category, which is unfortunate.
-	//AddCallback_OnTopLevelCustomizeContextChanged( panel, WeaponSkinsPanel_Update )
+	//AddCallback_OnTopLevelCustomizeContextChanged( panel, ModelsPanel_Update )
 	//SetCustomizeContext( PanelData_Get( panel ).weapon )
 
 	thread TrackIsOverScrollBar( file.panelDataMap[panel].listPanel )
 
-	WeaponSkinsPanel_Update( panel, true)
+	ModelsPanel_Update( panel, true)
 }
 
 
-void function WeaponSkinsPanel_OnHide( var panel )
+void function ModelsPanel_OnHide( var panel )
 {
-	printl("WeaponSkinsPanel: OnHide")
-	//RemoveCallback_OnTopLevelCustomizeContextChanged( panel, WeaponSkinsPanel_Update )
+	printl("ModelsPanel: OnHide")
+	//RemoveCallback_OnTopLevelCustomizeContextChanged( panel, ModelsPanel_Update )
 	Signal( uiGlobal.signalDummy, "TrackIsOverScrollBar" )
 
 	RunClientScript( "EnableModelTurn" )
-	WeaponSkinsPanel_Update( panel, false)
+	ModelsPanel_Update( panel, false)
 }
 
 
-void function WeaponSkinsPanel_Update( var panel, bool first)// TODO: IMPLEMENT
+void function ModelsPanel_Update( var panel, bool first)// TODO: IMPLEMENT
 {
 	PanelData pd    = file.panelDataMap[panel]
 	var scrollPanel = Hud_GetChild( pd.listPanel, "ScrollPanel" )
@@ -154,7 +145,6 @@ void function WeaponSkinsPanel_Update( var panel, bool first)// TODO: IMPLEMENT
 			var button = Hud_GetChild( scrollPanel, "GridButton" + flavIdx )
 			CustomizeModelButton_UnmarkForUpdating( button )
 		}
-		//file.modelList.clear()
 	}
 
 	CustomizeModelMenus_SetActionButton( null )
@@ -164,11 +154,11 @@ void function WeaponSkinsPanel_Update( var panel, bool first)// TODO: IMPLEMENT
 	{
 		array<string> assetList = file.modelList
 		void functionref( string ) previewFunc
-		void functionref( string, void functionref() proceedCb ) confirmationFunc
+        void functionref( string, void functionref() proceedCb) confirmationFunc
 		bool ignoreDefaultItemForCount
 
 		previewFunc = PreviewModel
-		confirmationFunc = OnEquipped
+        confirmationFunc = OnEquipped
 		ignoreDefaultItemForCount = false
 		
 		RuiSetString( pd.weaponNameRui, "text", Localize( "Models" ).toupper() )
@@ -186,7 +176,7 @@ void function WeaponSkinsPanel_Update( var panel, bool first)// TODO: IMPLEMENT
 }
 
 
-void function WeaponSkinsPanel_OnFocusChanged( var panel, var oldFocus, var newFocus )
+void function ModelsPanel_OnFocusChanged( var panel, var oldFocus, var newFocus )
 {
 	if ( !IsValid( panel ) ) // uiscript_reset
 		return
@@ -200,15 +190,14 @@ void function WeaponSkinsPanel_OnFocusChanged( var panel, var oldFocus, var newF
 }
 
 void function PreviewModel( string model ) {
-
 	RunClientScript("UIToClient_PreviewModel", model)
 }
 
-void function WeaponSkinsPanel_SetModels( string assets) {
+void function ModelsPanel_SetModels( string assets) {
 	file.modelList = deserialize(assets)
 
 	foreach(key, value in file.panelDataMap) {
-		WeaponSkinsPanel_Update(key, true)
+		ModelsPanel_Update(key, true)
 	}
 }
 
@@ -225,6 +214,6 @@ array<string> function deserialize(string serialized) {
 }
 
 void function OnEquipped(string mdl, void functionref() proceedCb) {
-	printl("Equipped: " + mdl)
-	proceedCb()
+    printl("EQUIPPED: " + mdl)	
+    proceedCb()
 }

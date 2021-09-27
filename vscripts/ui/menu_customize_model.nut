@@ -1,4 +1,4 @@
-global function InitCustomizeWeaponMenu
+global function InitCustomizeModelMenu
 
 struct
 {
@@ -11,9 +11,9 @@ struct
 } file
 
 
-void function InitCustomizeWeaponMenu( var newMenuArg )
+void function InitCustomizeModelMenu( var newMenuArg )
 {
-	var menu = GetMenu( "CustomizeWeaponMenu" )
+	var menu = GetMenu( "CustomizeModelMenu" )
 	file.menu = menu
 
 	SetTabRightSound( menu, "UI_Menu_ArmoryTab_Select" )
@@ -21,6 +21,10 @@ void function InitCustomizeWeaponMenu( var newMenuArg )
 
 	file.decorationRui = Hud_GetRui( Hud_GetChild( menu, "Decoration" ) )
 	file.titleRui = Hud_GetRui( Hud_GetChild( menu, "Title" ) )
+
+    Hud_Hide(Hud_GetChild(menu, "UserInfo"))
+    Hud_Hide(Hud_GetChild(menu, "Decoration"))
+    Hud_Hide(Hud_GetChild(menu, "Logo"))
 
 	file.weaponTabBodyPanelList = [
 		Hud_GetChild( menu, "WeaponSkinsPanel0" )
@@ -30,10 +34,10 @@ void function InitCustomizeWeaponMenu( var newMenuArg )
 		Hud_GetChild( menu, "WeaponSkinsPanel4" )
 	]
 
-	AddMenuEventHandler( menu, eUIEvent.MENU_OPEN, CustomizeWeaponMenu_OnOpen )
-	AddMenuEventHandler( menu, eUIEvent.MENU_SHOW, CustomizeWeaponMenu_OnShow )
-	AddMenuEventHandler( menu, eUIEvent.MENU_CLOSE, CustomizeWeaponMenu_OnClose )
-	AddMenuEventHandler( menu, eUIEvent.MENU_NAVIGATE_BACK, CustomizeWeaponMenu_OnNavigateBack )
+	AddMenuEventHandler( menu, eUIEvent.MENU_OPEN, CustomizeModelMenu_OnOpen )
+	AddMenuEventHandler( menu, eUIEvent.MENU_SHOW, CustomizeModelMenu_OnShow )
+	AddMenuEventHandler( menu, eUIEvent.MENU_CLOSE, CustomizeModelMenu_OnClose )
+	AddMenuEventHandler( menu, eUIEvent.MENU_NAVIGATE_BACK, CustomizeModelMenu_OnNavigateBack )
 
 	AddMenuFooterOption( menu, LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK" )
 	AddMenuFooterOption( menu, LEFT, BUTTON_A, true, "#A_BUTTON_SELECT", "" )
@@ -42,15 +46,15 @@ void function InitCustomizeWeaponMenu( var newMenuArg )
 }
 
 
-void function CustomizeWeaponMenu_OnOpen()
+void function CustomizeModelMenu_OnOpen()
 {
 	// (dw): the customize context should not change while this menu is up
 
 	RuiSetGameTime( file.decorationRui, "initTime", Time() )
 	RuiSetString( file.titleRui, "title", Localize( ItemFlavor_GetLongName( GetTopLevelCustomizeContext() ) ).toupper() )
 
-	AddCallback_OnTopLevelCustomizeContextChanged( file.menu, CustomizeWeaponMenu_Update )
-	CustomizeWeaponMenu_Update( file.menu )
+	AddCallback_OnTopLevelCustomizeContextChanged( file.menu, CustomizeModelMenu_Update )
+	CustomizeModelMenu_Update( file.menu )
 
 	if ( uiGlobal.lastMenuNavDirection == MENU_NAV_FORWARD )
 	{
@@ -62,20 +66,20 @@ void function CustomizeWeaponMenu_OnOpen()
 }
 
 
-void function CustomizeWeaponMenu_OnShow()
+void function CustomizeModelMenu_OnShow()
 {
 	UI_SetPresentationType( ePresentationType.WEAPON_SKIN )
 }
 
 
-void function CustomizeWeaponMenu_OnClose()
+void function CustomizeModelMenu_OnClose()
 {
-	RemoveCallback_OnTopLevelCustomizeContextChanged( file.menu, CustomizeWeaponMenu_Update )
-	CustomizeWeaponMenu_Update( file.menu )
+	RemoveCallback_OnTopLevelCustomizeContextChanged( file.menu, CustomizeModelMenu_Update )
+	CustomizeModelMenu_Update( file.menu )
 }
 
 
-void function CustomizeWeaponMenu_Update( var menu )
+void function CustomizeModelMenu_Update( var menu )
 {
 	for ( int panelIdx = 0; panelIdx < file.weaponTabBodyPanelList.len(); panelIdx++ )
 	{
@@ -113,11 +117,9 @@ void function CustomizeWeaponMenu_Update( var menu )
 }
 
 
-void function CustomizeWeaponMenu_OnNavigateBack()
+void function CustomizeModelMenu_OnNavigateBack()
 {
 	Assert( GetActiveMenu() == file.menu )
 
 	CloseActiveMenu()
 }
-
-
