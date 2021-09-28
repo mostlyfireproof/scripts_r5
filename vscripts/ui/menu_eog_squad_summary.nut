@@ -128,7 +128,7 @@ void function InitEOGMenu( var newMenuArg ) //
 	AddMenuFooterOption( menu, LEFT, BUTTON_A, false, "", "", TrySpectate )
 
 	#if R5DEV
-		//AddMenuFooterOption( menu, LEFT, BUTTON_Y, true, "Dev Menu", "Dev Menu", OpenModelMenu )
+		AddMenuFooterOption( menu, LEFT, BUTTON_Y, true, "Dev Menu", "Dev Menu", OpenModelMenu )
 	#endif
 
 	#if PC_PROG

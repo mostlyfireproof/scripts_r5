@@ -1520,10 +1520,6 @@ bool function ShouldShowButtonHints()
 	return file.showButtonHintsInt == 1
 }
 
-void function PEB_PRINT(string s) {
-	printl("UI: " + s)
-}
-
 // Set map visuals which cannot be set through level entity files
 void function TEMP_MapConVar_Init()
 {
