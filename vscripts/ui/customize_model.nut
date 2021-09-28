@@ -302,8 +302,7 @@ void function UpdateCustomizeItemButton( CustomizeModelButtonContext cbc, bool j
 	var rui = Hud_GetRui( cbc.button )
 
 	// Name, icon and quality
-	array<string> split = split(cbc.usedAsset, "/")
-	string name = Localize(split[split.len() - 1])
+	string name = Localize(cbc.usedAsset)
 	int quality = 0
 
 	RuiSetString( rui, "buttonText", name )

@@ -1,10 +1,13 @@
 global function InitCustomizeModelMenu
+global function CustomizeModelMenu_UpdateTitleRUI
+global function CustomizeModelMenu_UpdatePauseStatus
 
 struct
 {
 	var        menu
 	var        decorationRui
 	var        titleRui
+	var        equipRui
 	array<var> weaponTabBodyPanelList
 
 	array<ItemFlavor> weaponList
@@ -34,6 +37,12 @@ void function InitCustomizeModelMenu( var newMenuArg )
 		Hud_GetChild( menu, "WeaponSkinsPanel4" )
 	]
 
+	array<var> buttons = GetElementsByClassname(menu, "ActionButton")
+	foreach(button in buttons) {
+		file.equipRui = Hud_GetRui( button )
+		AddButtonEventHandler( button, UIE_CLICK, OnActionButtonClick )
+	}
+
 	AddMenuEventHandler( menu, eUIEvent.MENU_OPEN, CustomizeModelMenu_OnOpen )
 	AddMenuEventHandler( menu, eUIEvent.MENU_SHOW, CustomizeModelMenu_OnShow )
 	AddMenuEventHandler( menu, eUIEvent.MENU_CLOSE, CustomizeModelMenu_OnClose )
@@ -41,8 +50,8 @@ void function InitCustomizeModelMenu( var newMenuArg )
 
 	AddMenuFooterOption( menu, LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK" )
 	AddMenuFooterOption( menu, LEFT, BUTTON_A, true, "#A_BUTTON_SELECT", "" )
-	AddMenuFooterOption( menu, LEFT, BUTTON_X, true, "#X_BUTTON_EQUIP", "#X_BUTTON_EQUIP", null, CustomizeMenus_IsFocusedItemEquippable )
-	AddMenuFooterOption( menu, LEFT, BUTTON_X, true, "#X_BUTTON_UNLOCK", "#X_BUTTON_UNLOCK", null, CustomizeMenus_IsFocusedItemLocked )
+	AddMenuFooterOption( menu, LEFT, BUTTON_X, true, "Pause", "Pause")
+	//AddMenuFooterOption( menu, LEFT, BUTTON_X, true, "#X_BUTTON_UNLOCK", "#X_BUTTON_UNLOCK", null, CustomizeMenus_IsFocusedItemLocked )
 }
 
 
@@ -51,7 +60,8 @@ void function CustomizeModelMenu_OnOpen()
 	// (dw): the customize context should not change while this menu is up
 
 	RuiSetGameTime( file.decorationRui, "initTime", Time() )
-	RuiSetString( file.titleRui, "title", Localize( ItemFlavor_GetLongName( GetTopLevelCustomizeContext() ) ).toupper() )
+	RuiSetString( file.titleRui, "title", Localize("Models"))
+	CustomizeModelMenu_UpdatePauseStatus(false)
 
 	AddCallback_OnTopLevelCustomizeContextChanged( file.menu, CustomizeModelMenu_Update )
 	CustomizeModelMenu_Update( file.menu )
@@ -68,7 +78,7 @@ void function CustomizeModelMenu_OnOpen()
 
 void function CustomizeModelMenu_OnShow()
 {
-	UI_SetPresentationType( ePresentationType.WEAPON_SKIN )
+	UI_SetPresentationType( ePresentationType.MODEL )
 }
 
 
@@ -76,6 +86,7 @@ void function CustomizeModelMenu_OnClose()
 {
 	RemoveCallback_OnTopLevelCustomizeContextChanged( file.menu, CustomizeModelMenu_Update )
 	CustomizeModelMenu_Update( file.menu )
+	RunClientScript("ClearModelMenu")
 }
 
 
@@ -122,4 +133,16 @@ void function CustomizeModelMenu_OnNavigateBack()
 	Assert( GetActiveMenu() == file.menu )
 
 	CloseActiveMenu()
+}
+
+void function CustomizeModelMenu_UpdateTitleRUI(string to) {
+	RuiSetString( file.titleRui, "title", Localize(to) )
+}
+
+void function CustomizeModelMenu_UpdatePauseStatus(bool paused) {
+	if (paused) {
+		RuiSetString( file.equipRui, "labelText", Localize("Resume"))
+	} else {
+		RuiSetString( file.equipRui, "labelText", Localize("Pause"))
+	}
 }

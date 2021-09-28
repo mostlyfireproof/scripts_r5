@@ -87,6 +87,7 @@ void function SV_CL_Init()
 	ClientSidePickups_Init()
 	GrappleWeaponInit()
 	ShInfoCords_Init()
+	ShAssets_Init()
 
 	#if R5DEV
 		ShDevUtility_Init()

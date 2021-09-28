@@ -311,7 +311,6 @@ var function AddMenu( string blockName, asset resourceFile, void functionref( va
 var function AddPanel( var menu, string panelName, void functionref( var ) initFunc = null )
 {
 	//printt( "AddPanel called, panelName:", panelName )
-
 	var panel = Hud_GetChild( menu, panelName )
 	uiGlobal.panels[ panelName ] <- panel
 	uiGlobal.allPanels.append( panel )

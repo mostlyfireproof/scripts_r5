@@ -6,7 +6,6 @@ global function ServerCallback_TDM_DoLocationIntroCutscene
 global function ServerCallback_TDM_PlayerKilled
 
 global function Cl_RegisterLocation
-global function ServerCallback_TDMOpenModelMenu
 
 struct {
 
@@ -20,8 +19,6 @@ struct {
 
 void function Cl_CustomTDM_Init()
 {
-    RegisterSignal("EndSetPresentationType")
-    ClMenuModels_Init()
 }
 
 void function Cl_RegisterLocation(LocationSettings locationSettings)
@@ -60,11 +57,6 @@ void function MakeScoreRUI()
 	)
     
     WaitForever()
-}
-
-void function ServerCallback_TDMOpenModelMenu() {
-    printl("Recieved TDM Open Model Menu")
-    RunUIScript("ServerToUI_OpenModelMenu")
 }
 
 void function ServerCallback_TDM_DoAnnouncement(float duration, int type)
@@ -161,8 +153,14 @@ void function ServerCallback_TDM_DoLocationIntroCutscene_Body()
     GetLocalClientPlayer().ClearMenuCameraEntity()
     cutsceneMover.Destroy()
 
-    FadeOutSoundOnEntity( player, "music_skyway_04_smartpistolrun", 1 )
-    camera.Destroy()
+    if(IsValid(player))
+    {
+        FadeOutSoundOnEntity( player, "music_skyway_04_smartpistolrun", 1 )
+    }
+    if(IsValid(camera))
+    {
+        camera.Destroy()
+    }
     
     
 }
