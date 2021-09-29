@@ -134,7 +134,7 @@ void function StartRound()
 {
     SetGameState(eGameState.Playing)
     
-    foreach(player in GetPlayerArray())
+    /*foreach(player in GetPlayerArray())
     {
         if(IsValid(player))
         {
@@ -159,7 +159,7 @@ void function StartRound()
             Remote_CallFunction_NonReplay(player, "ServerCallback_TDM_DoAnnouncement", 4, eTDMAnnounce.MAP_FLYOVER)
     }
     wait Deathmatch_GetIntroCutsceneSpawnDuration() * Deathmatch_GetIntroCutsceneNumSpawns()
-    
+    */
 
     foreach(player in GetPlayerArray())
     {   

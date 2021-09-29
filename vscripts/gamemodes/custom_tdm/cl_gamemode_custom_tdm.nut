@@ -37,7 +37,7 @@ void function MakeScoreRUI()
     clGlobal.levelEnt.EndSignal( "CloseScoreRUI" )
 
     UISize screenSize = GetScreenSize()
-    var screenAlignmentTopo = RuiTopology_CreatePlane( <( screenSize.width * 0.25),( screenSize.height * 0.31 ), 0>, <float( screenSize.width ), 0, 0>, <0, float( screenSize.height ), 0>, false )
+    var screenAlignmentTopo = RuiTopology_CreatePlane( <(screenSize.width * -0.1),( screenSize.height * -0.5 ), 0>, <float( screenSize.width ), 0, 0>, <0, float( screenSize.height ), 0>, false )
     var rui = RuiCreate( $"ui/announcement_quick_right.rpak", screenAlignmentTopo, RUI_DRAW_HUD, RUI_SORT_SCREENFADE + 1 )
     
     RuiSetGameTime( rui, "startTime", Time() )
