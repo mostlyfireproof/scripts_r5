@@ -196,6 +196,8 @@ function MpWeaponTrophy_Init()
 		AddCallback_OnWeaponStatusUpdate( Trophy_OnWeaponStatusUpdate )
 	#endif // CLIENT
 
+	RegisterSignal( "EffectsTestingSingal" )
+
 	thread MpWeaponTrophyLate_Init()
 }
 
@@ -687,18 +689,20 @@ void function OnTrophyShieldAreaEnter( entity trigger, entity ent )
 
 	if ( ent.IsPlayer() )
 	{
-		printt( "PLAYER " + ent + " STARTED TOUCHING TRIGGER " + trigger )
-		thread Trophy_PlayerShieldUpdate( trigger, ent )
+		EmitSoundOnEntity( ent, TROPHY_SHIELD_REPAIR_START )
 	}
 	else if ( IsSurvivalTraining() && ent.GetScriptName() == "survival_training_target_dummy" ) // need to check share realm?
 	{
-		thread Trophy_PlayerShieldUpdate( trigger, ent )
+		EmitSoundOnEntity( ent, TROPHY_SHIELD_REPAIR_START )
 	}
 }
 
 void function OnTrophyShieldAreaLeave( entity trigger, entity ent )
 {
 	printl("[pylon] leaving")
+	EmitSoundOnEntity( ent, TROPHY_SHIELD_REPAIR_END)
+	//ent.Signal( "EffectsTestingSingal" )
+	//ent.Signal( "EndTacticalShieldRepair" )
 	// SignalSignalStruct( trigger, ent, "EndTacticalShieldRepair" )
 }
 
@@ -749,7 +753,7 @@ void function Trophy_PlayerShieldUpdate( entity trigger, entity player )
 		printt( "PLAYER " + player + " IS TOUCHING TRIGGER" )
 		WaitFrame()
 
-		// EmitSoundOnEntity( player, TROPHY_SHIELD_REPAIR_START )
+		//EmitSoundOnEntity( player, TROPHY_SHIELD_REPAIR_START )
 
 		StatusEffect_AddEndless( player, eStatusEffect.trophy_shield_repair, 1 )
 		
@@ -914,6 +918,34 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 		WaitFrame()
 	}
 	*/
+
+	while(IsValid(trigger))
+    {
+
+        foreach(ents in GetPlayerArray_Alive())
+        {
+            if(!IsValid(ents)) continue
+            if(Distance(ents.GetOrigin(), pylon.GetOrigin()) < TROPHY_REMINDER_TRIGGER_RADIUS)
+            {
+				printt( "PLAYER " + ents + " IS IN PYLON RADIUS " + trigger )
+
+				StatusEffect_AddEndless( ents, eStatusEffect.trophy_shield_repair, 1 )
+
+				if (ents.GetShieldHealth() < ents.GetShieldHealthMax())
+				{
+					int currentplayersheilds = ents.GetShieldHealth()
+					int newplayersheilds = currentplayersheilds + 1
+					ents.SetShieldHealth( newplayersheilds )
+				}
+
+				//Release this player as a heal target.
+				Trophy_ReleasePlayerAsHealTarget( pylon, ents )
+				if ( ents.IsPlayer() )
+					StatusEffect_Stop( ents, eStatusEffect.trophy_shield_repair )
+            }
+        }
+        wait 0.2
+    }
 }
 
 #endif //SERVER
