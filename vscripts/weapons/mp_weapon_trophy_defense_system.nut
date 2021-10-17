@@ -578,28 +578,62 @@ void function SCB_WattsonRechargeHint()
 void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacementInfo placementInfo  ) {
 	printf("Placing the pylon!")
 
+	entity owner = weapon.GetOwner()
+	owner.EndSignal( "OnDestroy" )
+
 	// realms cause it to crash on loading the map
 	//	trophy.RemoveFromAllRealms()
 	//	trophy.AddToOtherEntitysRealms( weapon )
 
+	// sets up the pylon and its information
 	entity pylon = CreatePropDynamic(model, placementInfo.origin, placementInfo.angles, 6)
 
 	pylon.SetMaxHealth( TROPHY_HEALTH_AMOUNT )
 	pylon.SetHealth( TROPHY_HEALTH_AMOUNT )
+	pylon.SetTakeDamageType( DAMAGE_EVENTS_ONLY )
+	pylon.SetDamageNotifications( true )
 	pylon.SetCanBeMeleed( true )
+
+	pylon.EndSignal( "OnDestroy" )
+
+	// can be detected by sonar
+	pylon.Highlight_Enable()
+	AddSonarDetectionForPropScript( pylon )
+	
 
 	TrophyDeathSetup( pylon )
 	EmitSoundOnEntity(pylon, TROPHY_EXPAND_SOUND)
 
-	waitthread PlayAnim( pylon, EXPAND )
-	ActiveTrophyDefense( pylon )
+
+	// makes it pingable
+	// entity wp = CreateWaypoint_Ping_Location( owner, ePingType.I_DEFENDING, pylon, pylon.GetOrigin(), -1, false )
+	// wp.SetAbsOrigin( pylon.GetOrigin() )
+	// wp.SetParent( pylon )
+	
+	thread TrophyAnims( pylon )
+	waitthread ActiveTrophyDefense( pylon )
 
 }
 
-// Intercepts projectiles, charges shields, and plays the animations / sounds
-// CURRENTLY ONLY SPINS
-void function ActiveTrophyDefense( entity pylon ) {
+
+// spins and makes particles
+void function TrophyAnims( entity pylon ) {
+	// TODO: figure out what these signals mean
+	EndSignal( pylon, "OnDestroy" )
+	// entity owner = pylon.GetOwner()
+	// EndSignal( owner, "OnDestroy" )
+
+	// TODO: add particles
+
+	waitthread PlayAnim( pylon, EXPAND )
 	thread PlayAnim( pylon, IDLE_OPEN )
+}
+
+// Intercepts projectiles, charges shields, and plays the sounds
+void function ActiveTrophyDefense( entity pylon ) {
+	// actions
+	// thread 
+
 }
 
 
@@ -743,12 +777,10 @@ void function Trophy_OnWeaponStatusUpdate( entity player, var rui, int slot )
 #if CLIENT
 void function Trophy_OnPropScriptCreated( entity ent )
 {
-	switch ( ent.GetScriptName() )
-	{
-		case "trophy_system":
-			//
-			break
-	}
+	// not sure how to actually run / implement this
+	// printl("placing on map")
+	thread Trophy_CreateHUDMarker( ent )
+
 }
 
 void function Trophy_CreateHUDMarker( entity trophy )
@@ -782,15 +814,18 @@ void function Trophy_CreateHUDMarker( entity trophy )
 
 bool function Trophy_ShouldShowIcon( entity localViewPlayer, entity trapProxy )
 {
-	if ( !IsValid( localViewPlayer ) )
+	entity owner = trapProxy.GetBossPlayer()
+
+	if ( !IsValid( owner ) )
 		return false
 
-	if ( localViewPlayer.GetTeam() != trapProxy.GetTeam() )
+	if ( localViewPlayer.GetTeam() != owner.GetTeam() )
 		return false
 
 	if ( !GamePlayingOrSuddenDeath() )
 		return false
 
+	printl("valid")
 	return true
 }
 
