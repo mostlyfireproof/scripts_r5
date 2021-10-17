@@ -609,7 +609,7 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	pylon.Highlight_Enable()
 	AddSonarDetectionForPropScript( pylon )
 
-	TrackingVision_CreatePOI( eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TROPHY_SYSTEM, owner, projectile.GetOrigin(), owner.GetTeam(), owner )
+	TrackingVision_CreatePOI( eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TROPHY_SYSTEM, owner, pylon.GetOrigin(), owner.GetTeam(), owner )
 
 
 	TrophyDeathSetup( pylon )
@@ -687,7 +687,7 @@ void function OnTrophyShieldAreaEnter( entity trigger, entity ent )
 
 	if ( ent.IsPlayer() )
 	{
-		//	printt( "PLAYER " + ent + " STARTED TOUCHING TRIGGER " + trigger )
+		printt( "PLAYER " + ent + " STARTED TOUCHING TRIGGER " + trigger )
 		thread Trophy_PlayerShieldUpdate( trigger, ent )
 	}
 	else if ( IsSurvivalTraining() && ent.GetScriptName() == "survival_training_target_dummy" ) // need to check share realm?
@@ -759,7 +759,7 @@ void function Trophy_PlayerShieldUpdate( entity trigger, entity player )
 		//TacticalChargeVisualsEnabled( player, eStatusEffect.trophy_shield_repair, 1 )
 
 		//Release this player as a heal target.
-		DeployableMedic_ReleasePlayerAsHealTarget( pylon, player )
+		Trophy_ReleasePlayerAsHealTarget( pylon, player )
 		if ( player.IsPlayer() )
 			StatusEffect_Stop( player, eStatusEffect.trophy_shield_repair )
 	}
@@ -767,7 +767,7 @@ void function Trophy_PlayerShieldUpdate( entity trigger, entity player )
 
 void function Trophy_ReleasePlayerAsHealTarget( entity pylon, entity player )
 {
-	printt( "RELEASING PLAYER " + player + " AS HEAL TARGET FOR TRIGGER " + trigger )
+	printt( "RELEASING PLAYER " + player + " AS HEAL TARGET FOR TRIGGER " + pylon )
 
 	//HACK: UNTIL WE GET CODE FIX THAT PREVENTS PHASE SHIFTED CHARACTERS FROM TRIGGERING THE TRIGGER CALLBACK TWICE IN SUCESSION, WE NEED TO CHECK IF THE PLAYER IS A HEAL TARGET BECAUSE THEY CAN GET REMOVED TWICE IN SUCESSION.
 	// if ( !file.deployableData[ droneMedic ].healTargets.contains( player ) )
@@ -804,7 +804,7 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 
 	// int lastTargetCount     = DeployableMedic_GetHealTargetCount( trigger )
 	// float droneMedicEndTime = Time() + DEPLOYABLE_MEDIC_MAX_LIFETIME
-
+	/*
 	while ( true )
 	{
 		//If we have heal targets
@@ -913,6 +913,7 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 		lastTargetCount = targetCount
 		WaitFrame()
 	}
+	*/
 }
 
 #endif //SERVER
