@@ -74,6 +74,7 @@ const float TROPHY_ANGLE_LIMIT = 0.74
 const float TROPHY_DEPLOY_DELAY = 1.0
 
 // Damage
+float TROPHY_CURRENT_DAMAGE = 0
 const int TROPHY_HEALTH_AMOUNT = 150
 const float TROPHY_DAMAGE_FX_INTERVAL = 0.25
 
@@ -610,8 +611,10 @@ void function Trophy_Anims( entity pylon ) {
 
 
 	EmitSoundOnEntity(pylon, TROPHY_EXPAND_SOUND)
+	StartParticleEffectOnEntity( pylon, GetParticleSystemIndex( TROPHY_START_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
 	waitthread PlayAnim( pylon, EXPAND )
-	// StartParticleEffectOnEntity(pylon, GetParticleSystemIndex(TROPHY_RANGE_RADIUS_REMINDER_FX), FX_PATTACH_POINT_FOLLOW, pylon.LookupAttachment( "REF" ))
+	StartParticleEffectOnEntityWithPos( pylon, GetParticleSystemIndex( TROPHY_ELECTRICITY_FX ), FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0, 0, 60>, <0, 0, 0> )
+	StartParticleEffectOnEntity(pylon, GetParticleSystemIndex(TROPHY_RANGE_RADIUS_REMINDER_FX), FX_PATTACH_ABSORIGIN_FOLLOW, 0)
 	thread PlayAnim( pylon, IDLE_OPEN )
 }
 
@@ -812,8 +815,12 @@ void function TrophyDeathSetup( entity pylon )
 		}
 
 			entity attacker = DamageInfo_GetAttacker( damageInfo )
-			bool markedForDeath = false
 
+			printl("Damaged Pylon For " + damage + " Damage")
+
+			TROPHY_CURRENT_DAMAGE = TROPHY_CURRENT_DAMAGE + damage
+
+			bool markedForDeath = false
 			// the heck is marked for death
 			if ( damageSourceId == eDamageSourceId.damagedef_despawn )
 				markedForDeath = true
@@ -824,20 +831,36 @@ void function TrophyDeathSetup( entity pylon )
 			if ( !markedForDeath )
 				return
 
-			pylon.e.isDisabled = true
+			//StartParticleEffectOnEntity( pylon, GetParticleSystemIndex( deathFx ), FX_PATTACH_POINT_FOLLOW, attach_id )
+			//pylon.Hide()
+			//pylon.NotSolid()
+			//pylon.Destroy()
 
-			foreach( sound in deathSounds)
-				EmitSoundAtPosition( TEAM_ANY, pylon.GetOrigin(), sound )
 
-			thread CreateAirShake( pylon.GetOrigin(), 2, 50, 1 )
-			int attach_id = pylon.LookupAttachment( "REF" )
-			vector effectOrigin = pylon.GetAttachmentOrigin( attach_id )
-			vector effectAngles = pylon.GetAttachmentAngles( attach_id )
-			StartParticleEffectOnEntity( pylon, GetParticleSystemIndex( deathFx ), FX_PATTACH_POINT_FOLLOW, attach_id )
-			pylon.Hide()
-			pylon.NotSolid()
-			pylon.Destroy()
 
+			//Please find a better way
+
+			if (TROPHY_CURRENT_DAMAGE < TROPHY_HEALTH_AMOUNT)
+			{
+				StartParticleEffectOnEntityWithPos( pylon, GetParticleSystemIndex( TROPHY_DAMAGE_SPARK_FX ), FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0, 0, 60>, <0, 0, 0> )
+			}
+			else if ( TROPHY_CURRENT_DAMAGE >= TROPHY_HEALTH_AMOUNT )
+			{
+				pylon.e.isDisabled = true
+
+				foreach( sound in deathSounds)
+					EmitSoundAtPosition( TEAM_ANY, pylon.GetOrigin(), sound )
+
+				thread CreateAirShake( pylon.GetOrigin(), 2, 50, 1 )
+				int attach_id = pylon.LookupAttachment( "REF" )
+				vector effectOrigin = pylon.GetAttachmentOrigin( attach_id )
+				vector effectAngles = pylon.GetAttachmentAngles( attach_id )
+
+				StartParticleEffectOnEntity( pylon, GetParticleSystemIndex( TROPHY_DESTROY_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
+				
+				pylon.Destroy()
+				TROPHY_CURRENT_DAMAGE = 0
+			}
 		}
 	)
 
