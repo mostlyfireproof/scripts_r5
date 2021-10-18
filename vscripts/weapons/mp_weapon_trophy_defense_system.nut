@@ -74,7 +74,6 @@ const float TROPHY_ANGLE_LIMIT = 0.74
 const float TROPHY_DEPLOY_DELAY = 1.0
 
 // Damage
-float TROPHY_CURRENT_DAMAGE = 0
 const int TROPHY_HEALTH_AMOUNT = 150
 const float TROPHY_DAMAGE_FX_INTERVAL = 0.25
 
@@ -152,21 +151,20 @@ function MpWeaponTrophy_Init()
 	PrecacheParticleSystem( TROPHY_PLAYER_SHIELD_CHARGE_FX )
 	PrecacheParticleSystem( TROPHY_RANGE_RADIUS_REMINDER_FX )
 
-	//Pylon Explode Effect
-	PrecacheParticleSystem( $"P_exp_spectre_death" )
-
 	PrecacheModel( TROPHY_MODEL )
+
+	RegisterSignal( "EndTacticalShieldRepair" )
 
 	#if CLIENT
 		PrecacheParticleSystem( TACTICAL_CHARGE_FX )
 		PrecacheParticleSystem( TROPHY_PLACEMENT_RADIUS_FX )
+		PrecacheParticleSystem( TROPHY_PLAYER_SHIELD_CHARGE_FX )
 		StatusEffect_RegisterEnabledCallback( eStatusEffect.placing_trophy_system, Trophy_OnBeginPlacement)
 		StatusEffect_RegisterDisabledCallback( eStatusEffect.placing_trophy_system, Trophy_OnEndPlacement )
 		AddCreateCallback( "prop_script", Trophy_OnPropScriptCreated )
 
 		RegisterSignal( "Trophy_StopPlacementProxy" )
 		RegisterSignal( "EndTacticalChargeRepair" )
-		RegisterSignal( "EndTacticalShieldRepair" )
 		RegisterSignal( "UpdateShieldRepair" )
 
 		StatusEffect_RegisterEnabledCallback( eStatusEffect.trophy_tactical_charge, TacticalChargeVisualsEnabled)
@@ -622,6 +620,7 @@ void function Trophy_Anims( entity pylon ) {
 	waitthread PlayAnim( pylon, EXPAND )
 	StartParticleEffectOnEntityWithPos( pylon, GetParticleSystemIndex( TROPHY_ELECTRICITY_FX ), FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0, 0, 60>, <0, 0, 0> )
 	StartParticleEffectOnEntity(pylon, GetParticleSystemIndex(TROPHY_RANGE_RADIUS_REMINDER_FX), FX_PATTACH_ABSORIGIN_FOLLOW, 0)
+	EmitSoundOnEntity( pylon, TROPHY_ELECTRIC_IDLE_SOUND )
 	thread PlayAnim( pylon, IDLE_OPEN )
 }
 
@@ -678,6 +677,8 @@ void function OnTrophyShieldAreaEnter( entity trigger, entity ent )
 
 	if ( ent.IsPlayer() )
 	{
+		thread NewTacticalShieldRepairFXStart(ent)
+
 		EmitSoundOnEntity( ent, TROPHY_SHIELD_REPAIR_START )
 	}
 	else if ( IsSurvivalTraining() && ent.GetScriptName() == "survival_training_target_dummy" ) // need to check share realm?
@@ -691,7 +692,7 @@ void function OnTrophyShieldAreaLeave( entity trigger, entity ent )
 	printl("[pylon] leaving")
 	EmitSoundOnEntity( ent, TROPHY_SHIELD_REPAIR_END)
 	//ent.Signal( "EffectsTestingSingal" )
-	//ent.Signal( "EndTacticalShieldRepair" )
+	ent.Signal( "EndTacticalShieldRepair" )
 	// SignalSignalStruct( trigger, ent, "EndTacticalShieldRepair" )
 }
 
@@ -784,6 +785,38 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
     }
 }
 
+void function NewTacticalShieldRepairFXStart( entity player )
+{
+	player.Signal( "EndTacticalShieldRepair" )
+	player.EndSignal( "EndTacticalShieldRepair" )
+	player.EndSignal( "OnDeath" )
+	player.EndSignal( "OnDestroy" )
+
+	int oldArmorTier = -1
+
+	int AttachID = player.LookupAttachment( "CHESTFOCUS" )
+	entity fxID = StartParticleEffectOnEntityWithPos_ReturnEntity( player, GetParticleSystemIndex( TROPHY_PLAYER_SHIELD_CHARGE_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, AttachID, <0,0,0>, VectorToAngles( <0,0,-1> ) )
+
+	OnThreadEnd(
+		function() : ( fxID )
+		{
+			if (fxID != null)
+				fxID.Destroy()
+		}
+	)
+
+	while( true )
+	{
+		int armorTier = EquipmentSlot_GetEquipmentTier( player, "armor" )
+		if ( armorTier != oldArmorTier )
+		{
+			vector shieldColor = GetFXRarityColorForTier( armorTier )
+			EffectSetControlPointVector( fxID, 2, shieldColor )
+		}
+		wait 1
+	}
+}
+
 #endif //SERVER
 
 
@@ -871,7 +904,6 @@ void function Trophy_OnWeaponStatusUpdate( entity player, var rui, int slot )
 	RuiSetBool( rui, "rechargeBoosted", activeSuperChargeApplied )
 }
 #endif
-
 
 #if CLIENT
 void function Trophy_OnPropScriptCreated( entity ent )
@@ -1044,8 +1076,6 @@ void function TacticalShieldRepairFXStart( entity player )
 			vector shieldColor = GetFXRarityColorForTier( armorTier )
 			EffectSetControlPointVector( fxID, 2, shieldColor )
 		}
-
-		WaitSignal( player, "UpdateShieldRepair" )
 	}
 }
 
