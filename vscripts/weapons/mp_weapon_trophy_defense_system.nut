@@ -124,26 +124,12 @@ struct TrophyPlacementInfo
 	bool success = false
 }
 
-#if SERVER
-
-// Throwing GC stuff here, adapted from sh_loot_creeps.gnut
-global function TrophyDefenseGarbageCollect
-
-#endif // SERVER
-
-struct SignalStruct
-{
-	entity trigger
-	entity player
-}
 
 struct
 {
 	#if SERVER
 	array<entity>	trophyDefenseSystems
 	int				numActiveTrophyDefenseSystems
-	float			lastTimeTrophyDefenseSystemsGarbageCollected
-	array<SignalStruct> signalStructArray
 	#else
 	int tacticalChargeFXHandle
 	#endif
@@ -165,15 +151,6 @@ function MpWeaponTrophy_Init()
 	PrecacheParticleSystem( TROPHY_RANGE_RADIUS_REMINDER_FX )
 
 	PrecacheModel( TROPHY_MODEL )
-
-	#if SERVER
-		// RegisterSignal( OnTrophyShieldAreaEnter )
-		// RegisterSignal( OnTrophyShieldAreaLeave )
-
-		// More GC stuff
-		file.lastTimeTrophyDefenseSystemsGarbageCollected = Time()
-
-	#endif //
 
 	#if CLIENT
 		PrecacheParticleSystem( TACTICAL_CHARGE_FX )
@@ -630,9 +607,11 @@ void function Trophy_Anims( entity pylon ) {
 	// EndSignal( owner, "OnDestroy" )
 
 	// TODO: add particles
+
+
 	EmitSoundOnEntity(pylon, TROPHY_EXPAND_SOUND)
 	waitthread PlayAnim( pylon, EXPAND )
-	StartParticleEffectOnEntity(pylon, GetParticleSystemIndex(TROPHY_RANGE_RADIUS_REMINDER_FX), FX_PATTACH_ABSORIGIN_FOLLOW, 0)
+	// StartParticleEffectOnEntity(pylon, GetParticleSystemIndex(TROPHY_RANGE_RADIUS_REMINDER_FX), FX_PATTACH_POINT_FOLLOW, pylon.LookupAttachment( "REF" ))
 	thread PlayAnim( pylon, IDLE_OPEN )
 }
 
@@ -706,32 +685,6 @@ void function OnTrophyShieldAreaLeave( entity trigger, entity ent )
 	// SignalSignalStruct( trigger, ent, "EndTacticalShieldRepair" )
 }
 
-// CreateSignalStruct, SignalSignalStruct, and DestroySignalStruct are from
-// mp_weapon_deployable_medic.nut
-SignalStruct function CreateSignalStruct( entity trigger, entity player )
-{
-	SignalStruct singalStruct
-	singalStruct.player = player
-	singalStruct.trigger = trigger
-	file.signalStructArray.append( singalStruct )
-
-	return singalStruct
-}
-
-void function SignalSignalStruct( entity trigger, entity player, string signal )
-{
-	foreach( signalStruct in file.signalStructArray )
-	{
-		if ( signalStruct.trigger == trigger && signalStruct.player == player )
-			Signal( signalStruct, signal )
-	}
-}
-
-void function DestroySignalStruct( SignalStruct singalStruct )
-{
-	file.signalStructArray.fastremovebyvalue( singalStruct )
-}
-
 void function Trophy_PlayerShieldUpdate( entity trigger, entity player )
 {
 	Assert ( IsNewThread(), "Must be threaded off." )
@@ -794,130 +747,9 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 			if ( IsValid( pylon ) )
 			{
 				StopSoundOnEntity( pylon, TROPHY_SHIELD_REPAIR_START )
-
-				// array<HealData> healOverTimeArray = file.deployableData[ droneMedic ].healDataArray
-				// foreach( healData in healOverTimeArray )
-				// {
-				// 	if ( IsValid( healData.healTarget ) )
-				// 		EntityHealResource_Remove( healData.healTarget, healData.healResourceID )
-				// }
-				// file.deployableData[ droneMedic ].healDataArray.clear()
 			}
 		}
 	)
-
-	// int lastTargetCount     = DeployableMedic_GetHealTargetCount( trigger )
-	// float droneMedicEndTime = Time() + DEPLOYABLE_MEDIC_MAX_LIFETIME
-	/*
-	while ( true )
-	{
-		//If we have heal targets
-		array<entity> playerHealTargetArray = DeployableMedic_GetPlayerHealTargetArray( droneMedic )
-		int targetCount                     = playerHealTargetArray.len()
-		if ( targetCount != lastTargetCount )
-		{
-			//printt( "targetCount Differ", targetCount, lastTargetCount )
-			int healResource = file.deployableData[ droneMedic ].healResource
-
-			// cancel all heal in progress and start new ones as needed
-			int newHealResource = 0
-			bool healCanceled = false
-			array<HealData> healDataArray = file.deployableData[ droneMedic ].healDataArray
-			foreach( healData in healDataArray )
-			{
-				healCanceled = true
-				if ( IsValid( healData.healTarget ) )
-				{
-					newHealResource += EntityHealResource_GetRemainingHeals( healData.healTarget, healData.healResourceID )
-					EntityHealResource_Remove( healData.healTarget, healData.healResourceID )
-				}
-			}
-
-			if ( healCanceled )
-				healResource = newHealResource
-
-			file.deployableData[ droneMedic ].healDataArray.clear()
-			file.deployableData[ droneMedic ].healResource = healResource
-
-			if ( targetCount && healResource > 0 )
-			{
-				int healAmount     = healResource / targetCount
-				float healDuration = healAmount / DEPLOYABLE_MEDIC_HEAL_PER_SEC
-				//droneMedicEndTime  = Time() + healDuration
-
-				foreach( player in playerHealTargetArray )
-				{
-					if ( !IsValid( player ) || !player.IsPlayer() )
-						continue
-
-					float healPerSec = healAmount / healDuration
-					HealData healData
-					healData.healTarget = player
-					healData.healResourceID = EntityHealResource_Add( player, healDuration, healPerSec, 0, "mp_weapon_deployable_medic", droneMedic.GetOwner() )
-					Assert( healData.healResourceID != ENTITY_HEAL_RESOURCE_INVALID )
-					file.deployableData[ droneMedic ].healDataArray.append( healData )
-				}
-			}
-			//else
-			//{
-			//	float healResourceFrac = healResource / float( DEPLOYABLE_MEDIC_HEAL_AMOUNT )
-			//	droneMedicEndTime = Time() + max( DEPLOYABLE_MEDIC_MAX_LIFETIME * healResourceFrac, DEPLOYABLE_MEDIC_MIN_LIFETIME )
-			//	//printt( "Additional lifetime", max( DEPLOYABLE_MEDIC_MAX_LIFETIME * healResourceFrac, DEPLOYABLE_MEDIC_MIN_LIFETIME ) )
-			//}
-		}
-
-		//Set skin index based on amount of heal resource left.
-		//In the end it would be good to have an in-world bar on the device that drains as the heal resource is used up.
-
-		float resourceFrac = file.deployableData[ droneMedic ].healResource / float( DEPLOYABLE_MEDIC_HEAL_AMOUNT )
-		droneMedic.SetSoundCodeControllerValue( resourceFrac * 100.0 )
-
-		//if ( resourceFrac >= 0.66 )
-		//	droneMedic.SetSkin( DEPLOYABLE_MEDIC_RESOURCE_FULL_SKIN_INDEX )
-		//else if ( resourceFrac >= 0.33 )
-		//	droneMedic.SetSkin( DEPLOYABLE_MEDIC_RESOURCE_HALF_SKIN_INDEX )
-		//else
-		//	droneMedic.SetSkin( DEPLOYABLE_MEDIC_RESOURCE_LOW_SKIN_INDEX )
-
-		//if we have exausted our heal resource or run out of time, end our update.
-		if ( ( targetCount == 0 && Time() > droneMedicEndTime ) || file.deployableData[ droneMedic ].healResource <= 0 )
-		{
-			array<HealData> healDataArray = file.deployableData[ droneMedic ].healDataArray
-			foreach( healData in healDataArray )
-			{
-				// due to health being an int and time a float we sometimes have a tiny bit more health left to add before we are done
-				entity target = healData.healTarget
-				if ( IsAlive( target ) )
-				{
-					int remainingHeal = EntityHealResource_GetRemainingHeals( target, healData.healResourceID )
-					int currentHealth = target.GetHealth()
-					int finalHealth = minint( target.GetMaxHealth(), currentHealth + remainingHeal )
-					target.SetHealth( finalHealth )
-
-					// todo(dw): I'm pretty sure this whole part of dishing out the final heal amounts is unnecessary (and complicates this stat hook)
-					int diff = finalHealth - currentHealth
-					if ( diff > 0 )
-						StatsHook_MedicDeployableDrone_OnEntityHealResourceFinished( target, diff, "mp_weapon_deployable_medic", droneMedic.GetOwner() )
-				}
-			}
-
-			droneMedic.Signal( "DeployableMedic_HealDepleated" )
-			return
-		}
-
-		if ( targetCount == 0 && lastTargetCount > 0 )
-		{
-			StopSoundOnEntity( droneMedic, DEPLOYABLE_MEDIC_HEAL_LOOP_SOUND_3P )
-		}
-		else if ( targetCount > 0 && lastTargetCount == 0 )
-		{
-			EmitSoundOnEntity( droneMedic, DEPLOYABLE_MEDIC_HEAL_LOOP_SOUND_3P )
-		}
-
-		lastTargetCount = targetCount
-		WaitFrame()
-	}
-	*/
 
 	while(IsValid(trigger))
     {
@@ -951,8 +783,6 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 #endif //SERVER
 
 
-
-// GARBAGE COLLECTION
 #if SERVER
 // Copied from sh_loot_creeps.gnut, sets this up to take damage and die
 void function TrophyDeathSetup( entity pylon )
@@ -1021,51 +851,6 @@ void function TrophyDeathSetup( entity pylon )
 
 }
 
-void function TrophyDefenseGarbageCollect()
-{
-	print("Garbage collecting the pylons!")
-	foreach( pp in file.trophyDefenseSystems )
-	{
-		if ( !IsValid( pp ) )
-		{
-			file.trophyDefenseSystems.fastremovebyvalue( pp )
-			continue
-		}
-
-	if ( ShouldGarbageCollectTrophy( pp ) )
-		{
-			file.trophyDefenseSystems.fastremovebyvalue( pp )
-			pp.Destroy()
-		}
-	}
-
-	file.numActiveTrophyDefenseSystems = file.trophyDefenseSystems.len()
-	file.lastTimeTrophyDefenseSystemsGarbageCollected = Time()
-}
-
-bool function ShouldGarbageCollectTrophy( entity trophy )
-{
-	print("Checking to see if this is a valid target to GC")
-	/* i am way too tired to implement this
-	vector origin = trophy.GetOrigin()
-
-	if ( !SURVIVAL_PosInsideDeathField( origin ) )
-		return true
-
-	//no players nearby?
-	const float maxDistSqr = 4000 * 4000
-	bool playerNearby = false
-	foreach( guy in GetPlayerArray_AliveConnected() )
-	{
-		float distanceSqr = Distance2DSqr( guy.GetOrigin(), origin )
-		if ( distanceSqr < maxDistSqr )
-			return false
-	}
-
-	return true
-	*/
-	return false
-}
 #endif
 
 #if CLIENT
