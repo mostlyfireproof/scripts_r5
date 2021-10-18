@@ -197,7 +197,8 @@ void function OnWeaponActivate_weapon_trophy_defense_system( entity weapon )
 	#endif
 
 	int statusEffect = eStatusEffect.placing_trophy_system
-	StatusEffect_AddEndless( ownerPlayer, statusEffect, 1.0 )
+	int fxId = StatusEffect_AddEndless( ownerPlayer, statusEffect, 1.0 )
+	printl("[pylon] add effect " + fxId)
 }
 
 void function OnWeaponDeactivate_weapon_trophy_defense_system( entity weapon )
@@ -209,7 +210,8 @@ void function OnWeaponDeactivate_weapon_trophy_defense_system( entity weapon )
 			return
 	#endif
 
-	StatusEffect_StopAllOfType( ownerPlayer, eStatusEffect.placing_trophy_system )
+	bool val = StatusEffect_Stop( ownerPlayer, eStatusEffect.placing_trophy_system )
+	printl("[pylon] stop effect " + val)
 }
 
 bool function OnWeaponAttemptOffhandSwitch_weapon_trophy_defense_system( entity weapon )
@@ -244,13 +246,11 @@ var function OnWeaponPrimaryAttack_weapon_trophy_defense_system( entity weapon, 
 		return 0
 
 	#if SERVER
-		// TODO: implement all the stuff here
-		// TODO: limit placement to TROPHY_MAX_COUNT, use dirty bomb code?
-		// apparently the collision is a separate model according to Sal
-
+		printl("[pylon] server thing")
 		thread WeaponMakesDefenseSystem(weapon, model, placementInfo)
 		PlayBattleChatterLineToSpeakerAndTeam( ownerPlayer, "bc_super" )
 	#endif
+	printl("[pylon] after placement")
 	StatusEffect_StopAllOfType( ownerPlayer, eStatusEffect.placing_trophy_system )
 	PlayerUsedOffhand( ownerPlayer, weapon, true, null, {pos = placementInfo.origin} )
 
@@ -441,7 +441,7 @@ void function Trophy_OnBeginPlacement( entity player, int statusEffect, bool act
 {
 	if ( player != GetLocalViewPlayer() )
 		return
-
+	printl("[pylon] beginning proxy")
 	EmitSoundOnEntity( player, TROPHY_PLACEMENT_ACTIVATE_SOUND )
 
 	asset model = TROPHY_MODEL
@@ -462,6 +462,7 @@ void function Trophy_OnEndPlacement( entity player, int statusEffect, bool actua
 void function Trophy_PlacementProxy( entity player, asset model )
 {
 	player.EndSignal( "Trophy_StopPlacementProxy" )
+	printl("[pylon] placing proxy")
 
 	entity proxy = Trophy_CreateTrapPlacementProxy( model )
 	proxy.EnableRenderAlways()
@@ -584,6 +585,8 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	pylon.SetCanBeMeleed( true )
 
 	pylon.EndSignal( "OnDestroy" )
+
+	// AddEntityCallback_OnDamaged( pylon, OnPylonDamaged )
 
 	// can be detected by sonar
 	pylon.Highlight_Enable()
@@ -759,7 +762,7 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 				if (ents.GetShieldHealth() < ents.GetShieldHealthMax())
 				{
 					int currentplayersheilds = ents.GetShieldHealth()
-					int newplayersheilds = currentplayersheilds + 1
+					int newplayersheilds = currentplayersheilds + TROPHY_SHIELD_REPAIR_AMOUNT
 					ents.SetShieldHealth( newplayersheilds )
 				}
 
@@ -771,7 +774,9 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
             }
 			if (SUPER_BUFF) { StatusEffect_Stop( ents, eStatusEffect.threat_vision ) }
         }
-        wait 0.2
+		// todo: use TROPHY_SHIELD_REPAIR_INTERVAL
+        // wait 0.2
+		wait TROPHY_SHIELD_REPAIR_INTERVAL
     }
 }
 
@@ -807,8 +812,7 @@ void function TrophyDeathSetup( entity pylon )
 					if ( damage < 40 )
 						return
 				break
-
-		}
+			}
 
 			entity attacker = DamageInfo_GetAttacker( damageInfo )
 
@@ -816,6 +820,10 @@ void function TrophyDeathSetup( entity pylon )
 			TROPHY_CURRENT_DAMAGE = TROPHY_CURRENT_DAMAGE + damage
 
 			//Please find a better way
+			
+			// makes damage numbers appear
+			if ( attacker.IsPlayer() )
+				attacker.NotifyDidDamage( pylon, 0, DamageInfo_GetDamagePosition( damageInfo ), DamageInfo_GetCustomDamageType( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageFlags( damageInfo ), DamageInfo_GetHitGroup( damageInfo ), DamageInfo_GetWeapon( damageInfo ), DamageInfo_GetDistFromAttackOrigin( damageInfo ) )
 
 			if (TROPHY_CURRENT_DAMAGE < TROPHY_HEALTH_AMOUNT)
 			{
