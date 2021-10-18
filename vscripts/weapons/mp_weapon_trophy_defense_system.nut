@@ -754,7 +754,7 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 				// printt( "PLAYER " + ents + " IS IN PYLON RADIUS " + trigger )
 
 				StatusEffect_AddEndless( ents, eStatusEffect.trophy_shield_repair, 1 )
-				if SUPER_BUFF {	StatusEffect_AddTimed( ents, eStatusEffect.threat_vision, 1, 1.0, 1.0 ) }
+				if (SUPER_BUFF) {	StatusEffect_AddTimed( ents, eStatusEffect.threat_vision, 1, 1.0, 1.0 ) }
 
 				if (ents.GetShieldHealth() < ents.GetShieldHealthMax())
 				{
@@ -769,7 +769,7 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 					StatusEffect_Stop( ents, eStatusEffect.trophy_shield_repair )
 					
             }
-			if SUPER_BUFF { StatusEffect_Stop( ents, eStatusEffect.threat_vision ) }
+			if (SUPER_BUFF) { StatusEffect_Stop( ents, eStatusEffect.threat_vision ) }
         }
         wait 0.2
     }
@@ -784,14 +784,10 @@ void function TrophyDeathSetup( entity pylon )
 {
 	// todo: fix this later
 
-	array <string> deathSounds
-	deathSounds.append( TROPHY_DESTROY_SOUND )
 	asset deathFx = TROPHY_DESTROY_FX
 
-	array<string> lootToSpawn // adding this in to hopefully prevent crashes while working
-
 	AddEntityCallback_OnDamaged( pylon,
-		void function ( entity pylon, var damageInfo ) : ( lootToSpawn, deathSounds, deathFx )
+		void function ( entity pylon, var damageInfo ) : ( deathFx )
 		{
 			if ( !IsValid( pylon ) )
 				return
@@ -817,26 +813,7 @@ void function TrophyDeathSetup( entity pylon )
 			entity attacker = DamageInfo_GetAttacker( damageInfo )
 
 			printl("Damaged Pylon For " + damage + " Damage")
-
 			TROPHY_CURRENT_DAMAGE = TROPHY_CURRENT_DAMAGE + damage
-
-			bool markedForDeath = false
-			// the heck is marked for death
-			if ( damageSourceId == eDamageSourceId.damagedef_despawn )
-				markedForDeath = true
-
-			else if ( IsValid( attacker ) && attacker.IsPlayer())
-				markedForDeath = true
-
-			if ( !markedForDeath )
-				return
-
-			//StartParticleEffectOnEntity( pylon, GetParticleSystemIndex( deathFx ), FX_PATTACH_POINT_FOLLOW, attach_id )
-			//pylon.Hide()
-			//pylon.NotSolid()
-			//pylon.Destroy()
-
-
 
 			//Please find a better way
 
@@ -848,8 +825,7 @@ void function TrophyDeathSetup( entity pylon )
 			{
 				pylon.e.isDisabled = true
 
-				foreach( sound in deathSounds)
-					EmitSoundAtPosition( TEAM_ANY, pylon.GetOrigin(), sound )
+				EmitSoundAtPosition( TEAM_ANY, pylon.GetOrigin(), TROPHY_DESTROY_SOUND )
 
 				thread CreateAirShake( pylon.GetOrigin(), 2, 50, 1 )
 				int attach_id = pylon.LookupAttachment( "REF" )
@@ -863,7 +839,6 @@ void function TrophyDeathSetup( entity pylon )
 			}
 		}
 	)
-
 }
 
 #endif
