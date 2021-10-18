@@ -152,6 +152,9 @@ function MpWeaponTrophy_Init()
 	PrecacheParticleSystem( TROPHY_PLAYER_SHIELD_CHARGE_FX )
 	PrecacheParticleSystem( TROPHY_RANGE_RADIUS_REMINDER_FX )
 
+	//Pylon Explode Effect
+	PrecacheParticleSystem( $"P_exp_spectre_death" )
+
 	PrecacheModel( TROPHY_MODEL )
 
 	#if CLIENT
@@ -583,6 +586,7 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	pylon.SetTakeDamageType( DAMAGE_EVENTS_ONLY )
 	pylon.SetDamageNotifications( true )
 	pylon.SetCanBeMeleed( true )
+	pylon.e.pylonhealth = TROPHY_HEALTH_AMOUNT
 
 	pylon.EndSignal( "OnDestroy" )
 
@@ -817,20 +821,21 @@ void function TrophyDeathSetup( entity pylon )
 			entity attacker = DamageInfo_GetAttacker( damageInfo )
 
 			printl("Damaged Pylon For " + damage + " Damage")
-			TROPHY_CURRENT_DAMAGE = TROPHY_CURRENT_DAMAGE + damage
 
-			//Please find a better way
+			pylon.e.pylonhealth = pylon.e.pylonhealth - damage
 			
 			// makes damage numbers appear
 			if ( attacker.IsPlayer() )
 				attacker.NotifyDidDamage( pylon, 0, DamageInfo_GetDamagePosition( damageInfo ), DamageInfo_GetCustomDamageType( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageFlags( damageInfo ), DamageInfo_GetHitGroup( damageInfo ), DamageInfo_GetWeapon( damageInfo ), DamageInfo_GetDistFromAttackOrigin( damageInfo ) )
 
-			if (TROPHY_CURRENT_DAMAGE < TROPHY_HEALTH_AMOUNT)
+			if (pylon.e.pylonhealth > 0)
 			{
 				StartParticleEffectOnEntityWithPos( pylon, GetParticleSystemIndex( TROPHY_DAMAGE_SPARK_FX ), FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0, 0, 60>, <0, 0, 0> )
 			}
-			else if ( TROPHY_CURRENT_DAMAGE >= TROPHY_HEALTH_AMOUNT )
+			else if ( pylon.e.pylonhealth <= 0 )
 			{
+				StartParticleEffectInWorld( GetParticleSystemIndex( TROPHY_DESTROY_FX ), pylon.GetOrigin(), VectorToAngles( pylon.GetForwardVector() ) )
+								
 				pylon.e.isDisabled = true
 
 				EmitSoundAtPosition( TEAM_ANY, pylon.GetOrigin(), TROPHY_DESTROY_SOUND )
@@ -839,11 +844,8 @@ void function TrophyDeathSetup( entity pylon )
 				int attach_id = pylon.LookupAttachment( "REF" )
 				vector effectOrigin = pylon.GetAttachmentOrigin( attach_id )
 				vector effectAngles = pylon.GetAttachmentAngles( attach_id )
-
-				StartParticleEffectOnEntity( pylon, GetParticleSystemIndex( TROPHY_DESTROY_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
 				
 				pylon.Destroy()
-				TROPHY_CURRENT_DAMAGE = 0
 			}
 		}
 	)

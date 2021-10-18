@@ -394,6 +394,9 @@ global struct ServerEntityStruct
 	bool gravityOrbInteraction
 
 	bool shouldSpawnLoot = true
+
+	//Trophy Structs
+	float pylonhealth
 }
 
 global struct MeritData
