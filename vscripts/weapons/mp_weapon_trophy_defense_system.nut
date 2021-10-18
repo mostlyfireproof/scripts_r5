@@ -110,6 +110,7 @@ const string SPIN = "prop_trophy_idle_open_spin"		// slow spin
 const bool TROPHY_DEBUG_DRAW = false
 const bool TROPHY_DEBUG_DRAW_PLACEMENT = false
 const bool TROPHY_DEBUG_DRAW_INTERSECTION = false
+const bool SUPER_BUFF = true
 
 
 #if CLIENT
@@ -172,8 +173,6 @@ function MpWeaponTrophy_Init()
 
 		AddCallback_OnWeaponStatusUpdate( Trophy_OnWeaponStatusUpdate )
 	#endif // CLIENT
-
-	RegisterSignal( "EffectsTestingSingal" )
 
 	thread MpWeaponTrophyLate_Init()
 }
@@ -469,7 +468,8 @@ void function Trophy_PlacementProxy( entity player, asset model )
 	DeployableModelHighlight( proxy )
 
 	int fxHandle = StartParticleEffectOnEntity( proxy, GetParticleSystemIndex( TROPHY_PLACEMENT_RADIUS_FX ), FX_PATTACH_POINT_FOLLOW, proxy.LookupAttachment( "REF" ) )
-
+	printl("particle " + fxHandle)
+	
 	var placementRui        = CreateCockpitPostFXRui( $"ui/trophy_placement.rpak", RuiCalculateDistanceSortKey( player.EyePosition(), proxy.GetOrigin() ) )
 
 	int placementAttachment = proxy.LookupAttachment( "REF" )
@@ -685,15 +685,12 @@ void function OnTrophyShieldAreaLeave( entity trigger, entity ent )
 	// SignalSignalStruct( trigger, ent, "EndTacticalShieldRepair" )
 }
 
+/*
 void function Trophy_PlayerShieldUpdate( entity trigger, entity player )
 {
 	Assert ( IsNewThread(), "Must be threaded off." )
 
-	printt( "STARTING SHIELD UPDATE FOR PLAYER " + player + " FOR TRIGGER " + trigger )
-	//printt( "PLAYER " + player + " IS PHASESHIFTED: " + player.IsPhaseShifted() )
-
-	// SignalStruct singalStruct = CreateSignalStruct( trigger, player )
-	// EndSignal( singalStruct, "EndTacticalShieldRepair" )
+	// printt( "STARTING SHIELD UPDATE FOR PLAYER " + player + " FOR TRIGGER " + trigger )
 
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
@@ -709,7 +706,6 @@ void function Trophy_PlayerShieldUpdate( entity trigger, entity player )
 		//EmitSoundOnEntity( player, TROPHY_SHIELD_REPAIR_START )
 
 		StatusEffect_AddEndless( player, eStatusEffect.trophy_shield_repair, 1 )
-		
 		// made get fx code from gas trap?
 		// need to worry about server / client here
 		//ShieldRepairVisualsEnabled( player, eStatusEffect.trophy_shield_repair, 1 )
@@ -721,18 +717,11 @@ void function Trophy_PlayerShieldUpdate( entity trigger, entity player )
 			StatusEffect_Stop( player, eStatusEffect.trophy_shield_repair )
 	}
 }
+*/
 
 void function Trophy_ReleasePlayerAsHealTarget( entity pylon, entity player )
 {
-	printt( "RELEASING PLAYER " + player + " AS HEAL TARGET FOR TRIGGER " + pylon )
-
-	//HACK: UNTIL WE GET CODE FIX THAT PREVENTS PHASE SHIFTED CHARACTERS FROM TRIGGERING THE TRIGGER CALLBACK TWICE IN SUCESSION, WE NEED TO CHECK IF THE PLAYER IS A HEAL TARGET BECAUSE THEY CAN GET REMOVED TWICE IN SUCESSION.
-	// if ( !file.deployableData[ droneMedic ].healTargets.contains( player ) )
-	// 	return
-
-	// Assert ( file.deployableData[ droneMedic ].healTargets.contains( player ), "Player is not a heal target." )
-	// int index = file.deployableData[ droneMedic ].healTargets.find( player )
-	// file.deployableData[ droneMedic ].healTargets.fastremove( index )
+	// printt( "RELEASING PLAYER " + player + " AS HEAL TARGET FOR TRIGGER " + pylon )
 }
 
 void function Trophy_ShieldUpdate( entity trigger, entity pylon )
@@ -759,9 +748,10 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
             if(!IsValid(ents)) continue
             if(Distance(ents.GetOrigin(), pylon.GetOrigin()) < TROPHY_REMINDER_TRIGGER_RADIUS)
             {
-				printt( "PLAYER " + ents + " IS IN PYLON RADIUS " + trigger )
+				// printt( "PLAYER " + ents + " IS IN PYLON RADIUS " + trigger )
 
 				StatusEffect_AddEndless( ents, eStatusEffect.trophy_shield_repair, 1 )
+				if SUPER_BUFF {	StatusEffect_AddTimed( ents, eStatusEffect.threat_vision, 1, 1.0, 1.0 ) }
 
 				if (ents.GetShieldHealth() < ents.GetShieldHealthMax())
 				{
@@ -774,7 +764,9 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 				Trophy_ReleasePlayerAsHealTarget( pylon, ents )
 				if ( ents.IsPlayer() )
 					StatusEffect_Stop( ents, eStatusEffect.trophy_shield_repair )
+					
             }
+			if SUPER_BUFF { StatusEffect_Stop( ents, eStatusEffect.threat_vision ) }
         }
         wait 0.2
     }
