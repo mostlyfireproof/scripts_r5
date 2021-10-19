@@ -725,7 +725,7 @@ void function NewTacticalShieldRepairFXStart( entity player )
 	//Armor 3P Repair FX
 	int oldArmorTier = -1
 	int AttachID = player.LookupAttachment( "CHESTFOCUS" )
-	entity fxID = StartParticleEffectOnEntityWithPos_ReturnEntity( player, GetParticleSystemIndex( TROPHY_PLAYER_SHIELD_CHARGE_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, AttachID, <0,0,0>, VectorToAngles( <0,0,-1> ) )
+	entity fxID = StartParticleEffectOnEntity_ReturnEntity( player, GetParticleSystemIndex( TROPHY_PLAYER_SHIELD_CHARGE_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, AttachID )
 
 	//Status Effects
 	StatusEffect_AddEndless( player, eStatusEffect.trophy_shield_repair, 1 )
