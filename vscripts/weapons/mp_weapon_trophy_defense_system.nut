@@ -646,10 +646,19 @@ void function Trophy_CreateTriggerArea( entity owner, entity pylon ) {
 
 	trigger.SetOrigin( origin )
 
+	OnThreadEnd(
+		function() : ( trigger )
+		{
+			if ( IsValid( trigger ) )
+			{
+				trigger.Destroy()
+			}
+		}
+	)
+
 	thread ProjectileTrigger(pylon)
 
 	waitthread Trophy_ShieldUpdate( trigger, pylon )
-	// TODO: create a trigger for grenades
 }
 
 void function OnTrophyNadeAreaEnter( entity trigger, entity ent )
@@ -829,9 +838,12 @@ void function ProjectileTrigger(entity pylon)
 		{
 			if( !IsValid( ent ) )
 				continue
-
+			
+			EmitSoundOnEntity( pylon, TROPHY_INTERCEPT_SMALL )
+			StartParticleEffectInWorld( GetParticleSystemIndex( TROPHY_INTERCEPT_PROJECTILE_CLOSE_FX ), ent.GetOrigin(), ent.GetAngles() )
 			ent.Destroy()
 		}
+		//WaitFrame()
 		wait 0.5
     }
 }
