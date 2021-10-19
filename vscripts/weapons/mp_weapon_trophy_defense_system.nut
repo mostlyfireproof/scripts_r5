@@ -573,17 +573,13 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	pylon.SetCanBeMeleed( true )
 	pylon.SetOwner(owner)
 	pylon.e.pylonhealth = TROPHY_HEALTH_AMOUNT
-
 	pylon.EndSignal( "OnDestroy" )
-
-	// AddEntityCallback_OnDamaged( pylon, OnPylonDamaged )
 
 	// can be detected by sonar
 	pylon.Highlight_Enable()
 	AddSonarDetectionForPropScript( pylon )
 
 	TrackingVision_CreatePOI( eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TROPHY_SYSTEM, owner, pylon.GetOrigin(), owner.GetTeam(), owner )
-
 
 	TrophyDeathSetup( pylon )
 	
@@ -711,16 +707,16 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 	while(IsValid(trigger))
     {
 
-        foreach(ents in GetPlayerArray_Alive())
+        foreach(player in GetPlayerArray_Alive())
         {
-            if(!IsValid(ents)) continue
-            if(Distance(ents.GetOrigin(), pylon.GetOrigin()) < TROPHY_REMINDER_TRIGGER_RADIUS)
+            if(!IsValid(player)) continue
+            if(Distance(player.GetOrigin(), pylon.GetOrigin()) < TROPHY_REMINDER_TRIGGER_RADIUS)
             {
-				if (ents.GetShieldHealth() < ents.GetShieldHealthMax())
+				if (player.GetShieldHealth() < player.GetShieldHealthMax())
 				{
-					int currentplayersheilds = ents.GetShieldHealth()
+					int currentplayersheilds = player.GetShieldHealth()
 					int newplayersheilds = currentplayersheilds + TROPHY_SHIELD_REPAIR_AMOUNT
-					ents.SetShieldHealth( newplayersheilds )
+					player.SetShieldHealth( newplayersheilds )
 				}
             }
         }
@@ -806,6 +802,8 @@ void function RadiusReminderFX( entity pylon )
 //Detects Projectiles
 void function ProjectileTrigger(entity pylon, entity trigger)
 {
+	//todo: work on this a bit more
+
 	pylon.EndSignal( "OnDestroy" )
 
 	OnThreadEnd(
@@ -813,7 +811,7 @@ void function ProjectileTrigger(entity pylon, entity trigger)
 		{
 			if ( IsValid( pylon ) )
 			{
-				//
+				//Might need to do somthing here in the future
 			}
 		}
 	)
@@ -832,7 +830,7 @@ void function ProjectileTrigger(entity pylon, entity trigger)
 			if( !IsValid( ent ) )
 				continue
 			
-			//If TROPHY_DESTROY_FRIENDLY_PROJECTILES is set to false dont destroy teammates stuff
+			//If TROPHY_DESTROY_FRIENDLY_PROJECTILES is set to false dont destroy teammates projectiles
 			if(!TROPHY_DESTROY_FRIENDLY_PROJECTILES)
 			{
 				if( ent.GetTeam() == pylonowner.GetTeam() )
@@ -856,13 +854,13 @@ void function ProjectileTrigger(entity pylon, entity trigger)
 			switch ( pclassname )
 			{
 				case "mp_weapon_grenade_gas":
-					//Reset ult if used
+					//Reset ult to no charge if used
 					player.GetOffhandWeapon( OFFHAND_INVENTORY ).SetWeaponPrimaryClipCount( 0 )
 				case "mp_weapon_grenade_defensive_bombardment":
-					//Reset ult if used
+					//Reset ult to no charge if used
 					player.GetOffhandWeapon( OFFHAND_INVENTORY ).SetWeaponPrimaryClipCount( 0 )
 				case "mp_weapon_grenade_creeping_bombardment":
-					//Reset ult if used
+					//Reset ult to no charge if used
 					player.GetOffhandWeapon( OFFHAND_INVENTORY ).SetWeaponPrimaryClipCount( 0 )
 				case "mp_weapon_grenade_emp":
 				case "mp_weapon_frag_grenade":
@@ -870,7 +868,6 @@ void function ProjectileTrigger(entity pylon, entity trigger)
 				case "mp_weapon_dirty_bomb":
 				case "mp_weapon_grenade_bangalore":
 				case "mp_weapon_bubble_bunker":
-
 					//Sound for zap
 					EmitSoundOnEntity( pylon, TROPHY_INTERCEPT_SMALL )
 			
@@ -881,9 +878,7 @@ void function ProjectileTrigger(entity pylon, entity trigger)
 
 					//Destroy ent
 					ent.Destroy()
-
 					break
-
 				default:
 					break
 			}
@@ -899,7 +894,7 @@ void function ProjectileTrigger(entity pylon, entity trigger)
 // Copied from sh_loot_creeps.gnut, sets this up to take damage and die
 void function TrophyDeathSetup( entity pylon )
 {
-	// todo: fix this later
+	// todo: maybe find a better health system for the pylon
 
 	asset deathFx = TROPHY_DESTROY_FX
 
@@ -928,14 +923,27 @@ void function TrophyDeathSetup( entity pylon )
 
 			entity attacker = DamageInfo_GetAttacker( damageInfo )
 
-			printl("Damaged Pylon For " + damage + " Damage")
+			//printl("Damaged Pylon For " + damage + " Damage")
 
+			//subtract damage from current pylon health
 			pylon.e.pylonhealth = pylon.e.pylonhealth - damage
 			
 			// makes damage numbers appear
 			if ( attacker.IsPlayer() )
-				// bug: when shot by a devo or smart pistol, the icon for Gibby's gun shield pops up with the number
-				attacker.NotifyDidDamage( pylon, 0, DamageInfo_GetDamagePosition( damageInfo ), DamageInfo_GetCustomDamageType( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageFlags( damageInfo ), DamageInfo_GetHitGroup( damageInfo ), DamageInfo_GetWeapon( damageInfo ), DamageInfo_GetDistFromAttackOrigin( damageInfo ) )
+			{
+				attacker.NotifyDidDamage
+				(
+					pylon,
+					DamageInfo_GetHitBox( damageInfo ),
+					DamageInfo_GetDamagePosition( damageInfo ), 
+					0,
+					DamageInfo_GetDamage( damageInfo ),
+					DamageInfo_GetDamageFlags( damageInfo ), 
+					DamageInfo_GetHitGroup( damageInfo ),
+					DamageInfo_GetWeapon( damageInfo ), 
+					DamageInfo_GetDistFromAttackOrigin( damageInfo )
+				)
+			}
 
 			if (pylon.e.pylonhealth > 0)
 			{
