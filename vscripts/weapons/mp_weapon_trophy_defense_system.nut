@@ -840,11 +840,15 @@ void function ProjectileTrigger(entity pylon)
 				continue
 			
 			EmitSoundOnEntity( pylon, TROPHY_INTERCEPT_SMALL )
-			StartParticleEffectInWorld( GetParticleSystemIndex( TROPHY_INTERCEPT_PROJECTILE_CLOSE_FX ), ent.GetOrigin(), ent.GetAngles() )
+			
+			entity zap = StartParticleEffectInWorld_ReturnEntity( GetParticleSystemIndex( TROPHY_INTERCEPT_PROJECTILE_CLOSE_FX ), ent.GetOrigin(), ent.GetAngles() )
+			vector pyloncenter = pylon.GetOrigin() + <0, 0, 60>
+			EffectSetControlPointVector( zap, 1, pyloncenter )
+
 			ent.Destroy()
 		}
 		//WaitFrame()
-		wait 0.5
+		wait 0.2
     }
 }
 
