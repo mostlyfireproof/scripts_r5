@@ -110,6 +110,8 @@ const string SPIN = "prop_trophy_idle_open_spin"		// slow spin
 const bool TROPHY_DEBUG_DRAW = false
 const bool TROPHY_DEBUG_DRAW_PLACEMENT = false
 const bool TROPHY_DEBUG_DRAW_INTERSECTION = false
+
+//Custom Stuff
 const bool TROPHY_DESTROY_FRIENDLY_PROJECTILES = true
 const bool SUPER_BUFF_THREATVISION = true
 const bool SUPER_BUFF_SPEEDBOOST = true
@@ -650,18 +652,6 @@ void function Trophy_CreateTriggerArea( entity owner, entity pylon ) {
 	waitthread Trophy_ShieldUpdate( trigger, pylon )
 }
 
-void function OnTrophyNadeAreaEnter( entity trigger, entity ent )
-{
-	printl("[nadetrigger] entered")
-	// this could be removed once the trigger no longer gets triggered by ents in different realms. bug R5DEV-46753
-	if ( ent.IsPlayer() ) return
-
-	if ( ent.IsProjectile() )
-	{
-		ent.Destroy()
-	}
-}
-
 void function OnTrophyShieldAreaEnter( entity trigger, entity ent )
 {
 	printl("[pylon] entered")
@@ -820,7 +810,7 @@ void function ProjectileTrigger(entity pylon, entity trigger)
     {
 		//get all projectiles that enter the radius
 		array<entity> projectilegrenades
-		projectilegrenades.extend( GetProjectileArrayEx( "grenade", TEAM_ANY, TEAM_ANY, pylon.GetOrigin(), TROPHY_REMINDER_TRIGGER_RADIUS ) )
+		projectilegrenades.extend( GetProjectileArrayEx( "grenade", TEAM_ANY, TEAM_ANY, pylon.GetOrigin(), TROPHY_INTERCEPT_PROJECTILE_RANGE ) )
 		
 		//Get pylon owner
 		entity pylonowner = pylon.GetOwner()
