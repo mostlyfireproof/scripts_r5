@@ -110,8 +110,10 @@ const string SPIN = "prop_trophy_idle_open_spin"		// slow spin
 const bool TROPHY_DEBUG_DRAW = false
 const bool TROPHY_DEBUG_DRAW_PLACEMENT = false
 const bool TROPHY_DEBUG_DRAW_INTERSECTION = false
+const bool TROPHY_DESTROY_FRIENDLY_PROJECTILES = true
 const bool SUPER_BUFF_THREATVISION = true
 const bool SUPER_BUFF_SPEEDBOOST = true
+const bool SUPER_BUFF_FASTHEAL = true
 
 
 #if CLIENT
@@ -579,6 +581,7 @@ void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacem
 	pylon.SetTakeDamageType( DAMAGE_EVENTS_ONLY )
 	pylon.SetDamageNotifications( true )
 	pylon.SetCanBeMeleed( true )
+	pylon.SetOwner(owner)
 	pylon.e.pylonhealth = TROPHY_HEALTH_AMOUNT
 
 	pylon.EndSignal( "OnDestroy" )
@@ -656,7 +659,7 @@ void function Trophy_CreateTriggerArea( entity owner, entity pylon ) {
 		}
 	)
 
-	thread ProjectileTrigger(pylon)
+	thread ProjectileTrigger(pylon, trigger)
 
 	waitthread Trophy_ShieldUpdate( trigger, pylon )
 }
@@ -758,6 +761,7 @@ void function NewTacticalShieldRepairFXStart( entity player )
 	StatusEffect_AddEndless( player, eStatusEffect.trophy_shield_repair, 1 )
 	if (SUPER_BUFF_THREATVISION) {	StatusEffect_AddEndless( player, eStatusEffect.threat_vision, 1 ) }
 	if (SUPER_BUFF_SPEEDBOOST) {	StatusEffect_AddEndless( player, eStatusEffect.speed_boost, 0.2 ) }
+	if (SUPER_BUFF_FASTHEAL) {	GiveExtraWeaponMod( player, "fast_heal" ) }
 
 	OnThreadEnd(
 		function() : ( fxID, player )
@@ -766,6 +770,7 @@ void function NewTacticalShieldRepairFXStart( entity player )
 			StatusEffect_Stop( player, eStatusEffect.trophy_shield_repair )
 			if (SUPER_BUFF_THREATVISION) { StatusEffect_StopAllOfType( player, eStatusEffect.threat_vision ) }
 			if (SUPER_BUFF_SPEEDBOOST) { StatusEffect_StopAllOfType( player, eStatusEffect.speed_boost ) }
+			if (SUPER_BUFF_FASTHEAL) { TakeExtraWeaponMod( player, "fast_heal" ) }
 
 			//Remove 3P Repair Effects
 			if (fxID != null)
@@ -815,7 +820,7 @@ void function RadiusReminderFX( entity pylon )
 }
 
 //Detects Projectiles
-void function ProjectileTrigger(entity pylon)
+void function ProjectileTrigger(entity pylon, entity trigger)
 {
 	pylon.EndSignal( "OnDestroy" )
 
@@ -831,24 +836,75 @@ void function ProjectileTrigger(entity pylon)
 
 	while(IsValid(pylon))
     {
+		//get all projectiles that enter the radius
 		array<entity> projectilegrenades
 		projectilegrenades.extend( GetProjectileArrayEx( "grenade", TEAM_ANY, TEAM_ANY, pylon.GetOrigin(), TROPHY_REMINDER_TRIGGER_RADIUS ) )
+		
+		//Get pylon owner
+		entity pylonowner = pylon.GetOwner()
 
 		foreach( entity ent in projectilegrenades )
 		{
 			if( !IsValid( ent ) )
 				continue
 			
-			EmitSoundOnEntity( pylon, TROPHY_INTERCEPT_SMALL )
-			
-			entity zap = StartParticleEffectInWorld_ReturnEntity( GetParticleSystemIndex( TROPHY_INTERCEPT_PROJECTILE_CLOSE_FX ), ent.GetOrigin(), ent.GetAngles() )
-			vector pyloncenter = pylon.GetOrigin() + <0, 0, 60>
-			EffectSetControlPointVector( zap, 1, pyloncenter )
+			//If TROPHY_DESTROY_FRIENDLY_PROJECTILES is set to false dont destroy teammates stuff
+			if(!TROPHY_DESTROY_FRIENDLY_PROJECTILES)
+			{
+				if( ent.GetTeam() == pylonowner.GetTeam() )
+					continue
+			}
 
-			ent.Destroy()
+			//Check if the player threw the projectile in the trigger range
+			//If so dont zap this entity
+			entity player = ent.GetOwner()
+			if(trigger.IsTouching(player))
+			{
+				if (ent.GetOwner() == player)
+				{
+					continue
+				}
+			}
+
+			//Get weaponclassname from ent
+			string pclassname = ent.ProjectileGetWeaponClassName()
+
+			switch ( pclassname )
+			{
+				case "mp_weapon_grenade_gas":
+					//Reset ult if used
+					player.GetOffhandWeapon( OFFHAND_INVENTORY ).SetWeaponPrimaryClipCount( 0 )
+				case "mp_weapon_grenade_defensive_bombardment":
+					//Reset ult if used
+					player.GetOffhandWeapon( OFFHAND_INVENTORY ).SetWeaponPrimaryClipCount( 0 )
+				case "mp_weapon_grenade_creeping_bombardment":
+					//Reset ult if used
+					player.GetOffhandWeapon( OFFHAND_INVENTORY ).SetWeaponPrimaryClipCount( 0 )
+				case "mp_weapon_grenade_emp":
+				case "mp_weapon_frag_grenade":
+				case "mp_weapon_thermite_grenade":
+				case "mp_weapon_dirty_bomb":
+				case "mp_weapon_grenade_bangalore":
+				case "mp_weapon_bubble_bunker":
+
+					//Sound for zap
+					EmitSoundOnEntity( pylon, TROPHY_INTERCEPT_SMALL )
+			
+					//Effects for zap
+					entity zap = StartParticleEffectInWorld_ReturnEntity( GetParticleSystemIndex( TROPHY_INTERCEPT_PROJECTILE_CLOSE_FX ), ent.GetOrigin(), ent.GetAngles() )
+					vector pyloncenter = pylon.GetOrigin() + <0, 0, 60>
+					EffectSetControlPointVector( zap, 1, pyloncenter )
+
+					//Destroy ent
+					ent.Destroy()
+
+					break
+
+				default:
+					break
+			}
 		}
-		//WaitFrame()
-		wait 0.2
+		wait 0.1
     }
 }
 
