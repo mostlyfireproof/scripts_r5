@@ -646,18 +646,22 @@ void function Trophy_CreateTriggerArea( entity owner, entity pylon ) {
 
 	trigger.SetOrigin( origin )
 
-
-	// seems overcomplicated
-	OnThreadEnd(
-		function() : ( trigger )
-		{
-			if ( IsValid( trigger ) )
-				trigger.Destroy()
-		}
-	)
+	thread ProjectileTrigger(pylon)
 
 	waitthread Trophy_ShieldUpdate( trigger, pylon )
 	// TODO: create a trigger for grenades
+}
+
+void function OnTrophyNadeAreaEnter( entity trigger, entity ent )
+{
+	printl("[nadetrigger] entered")
+	// this could be removed once the trigger no longer gets triggered by ents in different realms. bug R5DEV-46753
+	if ( ent.IsPlayer() ) return
+
+	if ( ent.IsProjectile() )
+	{
+		ent.Destroy()
+	}
 }
 
 void function OnTrophyShieldAreaEnter( entity trigger, entity ent )
@@ -798,6 +802,37 @@ void function RadiusReminderFX( entity pylon )
         RadiusReminderEnt = StartParticleEffectOnEntity_ReturnEntity( pylon, GetParticleSystemIndex(TROPHY_RANGE_RADIUS_REMINDER_FX), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
 
 		wait 2
+    }
+}
+
+//Detects Projectiles
+void function ProjectileTrigger(entity pylon)
+{
+	pylon.EndSignal( "OnDestroy" )
+
+	OnThreadEnd(
+		function() : ( pylon )
+		{
+			if ( IsValid( pylon ) )
+			{
+				//
+			}
+		}
+	)
+
+	while(IsValid(pylon))
+    {
+		array<entity> projectilegrenades
+		projectilegrenades.extend( GetProjectileArrayEx( "grenade", TEAM_ANY, TEAM_ANY, pylon.GetOrigin(), TROPHY_REMINDER_TRIGGER_RADIUS ) )
+
+		foreach( entity ent in projectilegrenades )
+		{
+			if( !IsValid( ent ) )
+				continue
+
+			ent.Destroy()
+		}
+		wait 0.5
     }
 }
 
