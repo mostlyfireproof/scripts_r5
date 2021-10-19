@@ -552,17 +552,7 @@ void function SCB_WattsonRechargeHint()
 */
 
 #if SERVER
-/*
-// TODO: function or something
- If this works, it will actually place Wattson's ult.
- Places to look:
-  *** sh_loot_creeps.gnut ***
-  *** _jump_pad.gnut ***
-  * MDLSpawner_SpawnModel
-  * CreateCarePackageAirdrop in sh_care_package
-  * zipline
-  * gas trap, gibby bubble
-*/
+// Primary function to place Wattson's ult
 void function WeaponMakesDefenseSystem( entity weapon, asset model, TrophyPlacementInfo placementInfo  ) {
 	printf("[pylon] Placing the pylon!")
 
@@ -621,7 +611,7 @@ void function Trophy_Anims( entity pylon ) {
 
 // Creates the active area 
 // based on the code i'm copying (deployable_medic.nut), this is team agnostic
-// Intercepts projectiles, charges shields, and plays the sounds
+// Intercepts projectiles, charges shields
 void function Trophy_CreateTriggerArea( entity owner, entity pylon ) {
 	printl("[pylon] Trigger area created")
 	Assert ( IsNewThread(), "Must be threaded" )
@@ -633,7 +623,7 @@ void function Trophy_CreateTriggerArea( entity owner, entity pylon ) {
 	entity trigger = CreateEntity( "trigger_cylinder" )
 	trigger.SetOwner( pylon )
 	trigger.SetRadius( TROPHY_REMINDER_TRIGGER_RADIUS )
-	trigger.SetAboveHeight( TROPHY_REMINDER_TRIGGER_RADIUS ) // not right
+	trigger.SetAboveHeight( TROPHY_REMINDER_TRIGGER_RADIUS )
 	trigger.SetBelowHeight( 48 )
 	trigger.SetOrigin( origin )
 	trigger.SetPhaseShiftCanTouch( false )
@@ -689,10 +679,6 @@ void function OnTrophyShieldAreaEnter( entity trigger, entity ent )
 
 		EmitSoundOnEntity( ent, TROPHY_SHIELD_REPAIR_START )
 	}
-	else if ( IsSurvivalTraining() && ent.GetScriptName() == "survival_training_target_dummy" ) // need to check share realm?
-	{
-		EmitSoundOnEntity( ent, TROPHY_SHIELD_REPAIR_START )
-	}
 }
 
 void function OnTrophyShieldAreaLeave( entity trigger, entity ent )
@@ -738,8 +724,6 @@ void function Trophy_ShieldUpdate( entity trigger, entity pylon )
 				}
             }
         }
-		// todo: use TROPHY_SHIELD_REPAIR_INTERVAL
-        // wait 0.2
 		wait TROPHY_SHIELD_REPAIR_INTERVAL
     }
 }
@@ -950,6 +934,7 @@ void function TrophyDeathSetup( entity pylon )
 			
 			// makes damage numbers appear
 			if ( attacker.IsPlayer() )
+				// bug: when shot by a devo or smart pistol, the icon for Gibby's gun shield pops up with the number
 				attacker.NotifyDidDamage( pylon, 0, DamageInfo_GetDamagePosition( damageInfo ), DamageInfo_GetCustomDamageType( damageInfo ), DamageInfo_GetDamage( damageInfo ), DamageInfo_GetDamageFlags( damageInfo ), DamageInfo_GetHitGroup( damageInfo ), DamageInfo_GetWeapon( damageInfo ), DamageInfo_GetDistFromAttackOrigin( damageInfo ) )
 
 			if (pylon.e.pylonhealth > 0)
