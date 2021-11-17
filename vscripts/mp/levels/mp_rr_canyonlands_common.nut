@@ -1281,18 +1281,18 @@ entity function CreateButton(vector pos, vector ang, string prompt)
 void function Highlight( entity e, string color )
 {
 	// Should be a switch but it does't want to work like that
-	if (color == "0" || color == "102")			e.kv.rendercolor = "150 150 150 255"	// black
+	if (color == "0" || color == "48")			e.kv.rendercolor = "101 101 101 255"	// black
 	else if (color == "1") 						e.kv.rendercolor = "240 0 0 255"		// rose
 	else if (color == "2") 						e.kv.rendercolor = "0 110 0 255"		// green
 	else if (color == "3") 						e.kv.rendercolor = "39 51 154 255"		// brown
 	else if (color == "4") 						e.kv.rendercolor = "0 0 255 255"		// blue
 	else if (color == "5") 						e.kv.rendercolor = "192 0 255 255"		// purple
 	else if (color == "6") 						e.kv.rendercolor = "0 255 255 255"		// cyan 
-	else if (color == "7" || color == "55") 	e.kv.rendercolor = "192 192 192 255"	// light gray
-	else if (color == "8" || color == "56")		e.kv.rendercolor = "170 170 170 255"	// gray
+	else if (color == "7" || color == "57") 	e.kv.rendercolor = "192 192 192 255"	// light gray
+	else if (color == "8" || color == "55" || color == "56")	e.kv.rendercolor = "170 170 170 255"	// gray
 	else if (color == "9") 						e.kv.rendercolor = "255 192 192 255"	// pink
 	// more letters go here but we don't need those
-	else if (color == "f" || color == "48")		e.kv.rendercolor = "255 255 255 255"	// white
+	else if (color == "f" || color == "102")		e.kv.rendercolor = "255 255 255 255"	// white
 	else {
 		e.kv.rendercolor = "255 0 0 255"												// red for error
 		printt("warning: " + color)
@@ -1332,12 +1332,21 @@ entity function CreatePixel( vector pos, string colors )
 }
 
 // Creates a grid of bubbles that represent pixels
+//
+//	+-----------------------------------------+
+//	| 0..halfY, halfZ..z | halfY..y, halfZ..z |
+//	|--------------------+--------------------|
+//	| 0..halfY, 0..halfZ | halfY..y, 0..halfZ |
+//	+-----------------------------------------+
+//
 void function MakePixels( int y, int z, vector start, int distance, array<string> animation ) {
 	int num = 0
-	for ( int i = 0; i < y; i++ ) {
-		for ( int j = 0; j < z; j++ ) {
+	int halfY = int(floor(y / 2))
+	int halfZ = int(floor(z / 2))
+	for ( int i = halfY; i < y; i++ ) {
+		for ( int j = halfZ; j < z; j++ ) {
 			printt("Creating pixel " + num)
-			thread CreatePixel( <start.x, start.y + (i * distance), start.z + (j * distance)>, animation[num] )
+			thread CreatePixel( <start.x, start.y + (i * distance), start.z + (j * distance)>, animation[j + (i * j)] )
 			num ++
 		}
 	}
@@ -1348,14 +1357,21 @@ void function SpawnEditorProps() {
     MakeGrid(32, 18, <-6000,-1000,3000>, 256)
 
 	// Creates a start button
-	entity start = CreateButton(<-5000, -1000, 3000>, <0,0,0>, "%&use% START VIDEO")
+	// entity start = CreateButton(<-5000, -1000, 3000>, <0,0,0>, "%&use% START VIDEO")
+	entity start = CreateButton(<9200, 27000, 4900>, <0,0,0>, "%&use% START VIDEO")
+
 	AddCallback_OnUseEntity( start, void function(entity panel, entity user, int input) 
 	{
 		// defines the animation
     	array<string> myAnimation = GetAnimation()
 		EmitSoundOnEntityOnlyToPlayer( user, user, FIRINGRANGE_BUTTON_SOUND )
+
+		// teleports the user to a set spot
+		user.SetOrigin( <-3000, 3000, 5500> )
+		user.SetAngles( <0, 180, 0> )
+
 		// Creates the bubbles that represent pixels
-		MakePixels(32, 18, <-6100,-1000,3128>, 128, myAnimation)
+		MakePixels(64, 36, <-6100,-1000,3128>, 128, myAnimation)
 	})
   }
 #endif
