@@ -897,3 +897,9 @@ Scripts:
 [
 	freelance/_freelance.gnut
 ]
+
+When: "SERVER"
+Scripts:
+[
+	mp/levels/animation.nut
+]
