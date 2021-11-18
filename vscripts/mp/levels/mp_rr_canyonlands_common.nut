@@ -1256,7 +1256,7 @@ entity function CreateEditorPropSimple( vector pos )
 void function MakeGrid( int y, int z, vector start, int distance ) {
 	for ( int i = 0; i < y; i++ ) {
 		for ( int j = 0; j < z; j++ ) {
-			CreateEditorPropSimple( <start.x, start.y + (i * distance), start.z + (j * distance)> )
+			CreateEditorPropSimple( <start.x, start.y - (i * distance), start.z + (j * distance)> )
 		}
 	}
 }
@@ -1324,6 +1324,7 @@ entity function CreatePixel( vector pos, string colors )
     DispatchSpawn( bubbleShield )
 
 	for (int i = 0; i < colors.len(); i++) {
+		if (pos ==  <-6100,-1000,3128>)	printt("Frame " + i)
 		Highlight(bubbleShield, string( colors[i] ))
 		WaitFrame()
 	}
@@ -1332,33 +1333,30 @@ entity function CreatePixel( vector pos, string colors )
 }
 
 // Creates a grid of bubbles that represent pixels
-//
-//	+-----------------------------------------+
-//	| 0..halfY, halfZ..z | halfY..y, halfZ..z |
-//	|--------------------+--------------------|
-//	| 0..halfY, 0..halfZ | halfY..y, 0..halfZ |
-//	+-----------------------------------------+
-//
 void function MakePixels( int y, int z, vector start, int distance, array<string> animation ) {
-	int num = 0
-	int halfY = int(floor(y / 2))
-	int halfZ = int(floor(z / 2))
-	for ( int i = halfY; i < y; i++ ) {
-		for ( int j = halfZ; j < z; j++ ) {
-			printt("Creating pixel " + num)
-			thread CreatePixel( <start.x, start.y + (i * distance), start.z + (j * distance)>, animation[j + (i * j)] )
-			num ++
+	int currentY = 0
+	int currentZ = 0
+
+	for ( int i = 0; i < animation.len(); i++) {
+		printt("Creating pixel " + currentY + " " + currentZ)
+		thread CreatePixel( <start.x, start.y - (currentY * distance), start.z + (currentZ * distance)>, animation[i] )
+
+		currentY++
+		if (currentY >= y) {
+			currentY = 0
+			currentZ++
 		}
 	}
 }
 
 void function SpawnEditorProps() {
 	// Creates the backdrop screen
-    MakeGrid(32, 18, <-6000,-1000,3000>, 256)
+	// one extra for a bit of a border
+    MakeGrid(17, 10, <5000, 11064, 4808>, 256)
 
 	// Creates a start button
 	// entity start = CreateButton(<-5000, -1000, 3000>, <0,0,0>, "%&use% START VIDEO")
-	entity start = CreateButton(<9200, 27000, 4900>, <0,0,0>, "%&use% START VIDEO")
+	entity start = CreateButton(<7400, 8830, 5350>, <0,180,0>, "%&use% START VIDEO")
 
 	AddCallback_OnUseEntity( start, void function(entity panel, entity user, int input) 
 	{
@@ -1367,11 +1365,12 @@ void function SpawnEditorProps() {
 		EmitSoundOnEntityOnlyToPlayer( user, user, FIRINGRANGE_BUTTON_SOUND )
 
 		// teleports the user to a set spot
-		user.SetOrigin( <-3000, 3000, 5500> )
-		user.SetAngles( <0, 180, 0> )
+		// user.SetOrigin( <7400, 8860, 5450> )
+		// user.SetAngles( <0, 180, 0> )
 
 		// Creates the bubbles that represent pixels
-		MakePixels(64, 36, <-6100,-1000,3128>, 128, myAnimation)
+		// MakePixels(32, 18, <-6100,6000,3128>, 128, myAnimation)
+		MakePixels(32, 18, <5000, 11000, 5000>, 128, myAnimation)
 	})
   }
 #endif
