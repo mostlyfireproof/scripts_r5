@@ -63,7 +63,7 @@ const string TESLA_TRAP_POST_COLLAPSE_SOUND = "wattson_tactical_o"
 const string TESLA_TRAP_DESTROY_SOUND = "wattson_tactical_p"
 const string TESLA_TRAP_DAMAGE_SPARK_SOUND = "wattson_tactical_q"
 
-const asset TESLA_TRAP_MODEL = $"mdl/props/gibraltar_bubbleshield/gibraltar_bubbleshield.rmdl"
+const asset TESLA_TRAP_MODEL = $"mdl/props/wattson_electric_fence/wattson_electric_fence.rmdl"
 const asset TESLA_TRAP_PROXY_MODEL = $"mdl/props/wattson_electric_fence/wattson_electric_fence.rmdl"
 const asset TESLA_TRAP_POLE_MODEL = $"mdl/props/pathfinder_zipline/pathfinder_zipline.rmdl"
 const asset TESLA_TRAP_TRIGGER_RADIUS_MODEL = $"mdl/weapons_r5/weapon_tesla_trap/mp_weapon_tesla_trap_ar_trigger_radius.rmdl"
@@ -2001,12 +2001,40 @@ bool function TeslaTrap_IsLinkAngleTooSteep( vector proxyTestPos, entity otherTr
 	return false
 }
 
+entity lastplaced
+int trapsplaced = 0
+
 #if SERVER
 // This is the serverside function to actually place the fence node.
 // Written by mostlyfireproof
 void function WeaponMakesTeslaTrap( entity weapon, asset model, TeslaTrapPlacementInfo placementInfo ) {
 	printf("Placing a node")
 	entity trap = CreatePropDynamic(model, placementInfo.origin, placementInfo.angles, 0)
+	EmitSoundOnEntity(trap, TESLA_TRAP_PLACEMENT_SOUND)
+	EmitSoundOnEntity(trap, TESLA_TRAP_POLE_RISE_SOUND)
+	waitthread PlayAnim( trap, "prop_fence_expand", placementInfo.origin, placementInfo.angles )
+	EmitSoundOnEntity(trap, TESLA_TRAP_ACTIVATE_SOUND)
 
+	
+	
+	//This is very shity and dosnt work well, was for testing
+	trapsplaced++
+
+	if (trapsplaced != 1)
+	{
+		int location = 25
+		for (int i=0; i<4; ++i) 
+		{
+			entity electric = StartParticleEffectInWorld_ReturnEntity( GetParticleSystemIndex( TESLA_TRAP_LINK_FX ), lastplaced.GetOrigin() + <0, 0, location>, lastplaced.GetAngles() )
+			vector polespot = trap.GetOrigin() + <0, 0, location>
+			EffectSetControlPointVector( electric, 1, polespot )
+			location = location + 25
+		}
+
+		EmitSoundOnEntity(trap, TESLA_TRAP_LINK_RECONNECT_POST_SOUND)
+		EmitSoundOnEntity(trap, TESLA_TRAP_LINK_LOOP_SOUND)
+	}
+
+	lastplaced = trap
 }
 #endif
