@@ -84,7 +84,7 @@ EditorMode function EditorModePlace_Init()
     AddClientCommandCallback("moveUp", ClientCommand_UP_Server )
     AddClientCommandCallback("moveDown", ClientCommand_DOWN_Server )
     AddClientCommandCallback( "ChangeSnapSize", ChangeSnapSize)
-    AddClientCommandCallback( "ChangeRotation", ChangeRotation)
+    AddClientCommandCallback( "ChagePitchRotation", ChagePitchRotation)
     #endif
 
 
@@ -101,7 +101,8 @@ void function EditorModePlace_Activation(entity player)
     AddInputHint( "%attack%", "Place Prop" )
     AddInputHint( "%zoom%", "Switch Prop")
     AddInputHint( "%scriptCommand1%", "Change Snap Size" )
-    AddInputHint( "%scriptCommand6%", "Change Rotation" )
+    AddInputHint( "%scriptCommand6%", "Change Pitch" )
+    AddInputHint( "%offhand3%", "Change Yaw" ) // no more gun shield or chat on controller because of this
     AddInputHint( "%weaponSelectPrimary0%", "Raise" )
     AddInputHint( "%weaponSelectPrimary1%", "Lower" )
     AddInputHint( "%offhand4%", "Open Model Menu" )
@@ -110,6 +111,7 @@ void function EditorModePlace_Activation(entity player)
     
     RegisterConCommandTriggeredCallback( "+scriptCommand1", SwapToNextSnapSize )
     RegisterConCommandTriggeredCallback( "+scriptCommand6", SwapToNextPitch )
+    RegisterConCommandTriggeredCallback( "+offhand3", SwapToNextYaw )
     RegisterConCommandTriggeredCallback( "weaponSelectPrimary0", ClientCommand_UP_Client )
     RegisterConCommandTriggeredCallback( "weaponSelectPrimary1", ClientCommand_DOWN_Client )
     RegisterConCommandTriggeredCallback( "+offhand4", ServerCallback_OpenModelMenu )
@@ -149,6 +151,7 @@ void function EditorModePlace_Deactivation(entity player)
     DeregisterConCommandTriggeredCallback( "weaponSelectPrimary1", ClientCommand_DOWN_Client )
     DeregisterConCommandTriggeredCallback( "+scriptCommand1", SwapToNextSnapSize )
     DeregisterConCommandTriggeredCallback( "+scriptCommand6", SwapToNextPitch )
+    DeregisterConCommandTriggeredCallback( "+offhand3", SwapToNextYaw )
     DeregisterConCommandTriggeredCallback( "+offhand4",  ServerCallback_OpenModelMenu )
     #elseif SERVER
     RemoveButtonPressedPlayerInputCallback( player, IN_ZOOM, ServerCallback_NextProp )
@@ -426,7 +429,7 @@ bool function ClientCommand_Section(entity player, array<string> args) {
     return false
 }
 
-bool function ChangeRotation( entity player, array<string> args )
+bool function ChagePitchRotation( entity player, array<string> args )
 {
     if (args[0] == "") return true
     
@@ -463,6 +466,7 @@ void function SwapToNextSnapSize(entity player)
             break;
     }
 }
+
 void function SwapToNextPitch(entity player)
 {
     if (player != GetLocalClientPlayer()) return;
@@ -470,23 +474,50 @@ void function SwapToNextPitch(entity player)
     {
         case 0:
             file.pitch = 30
-            player.ClientCommand( "ChangeRotation 30" )
+            player.ClientCommand( "ChagePitchRotation 30" )
             break;
         case 30:
             file.pitch = 35
-            player.ClientCommand( "ChangeRotation 35" )
+            player.ClientCommand( "ChagePitchRotation 35" )
             break;
         case 35:
             file.pitch = 45
-            player.ClientCommand( "ChangeRotation 45" )
+            player.ClientCommand( "ChagePitchRotation 45" )
             break;
         case 45:
         default:
             file.pitch = 0
-            player.ClientCommand( "ChangeRotation 0" )
+            player.ClientCommand( "ChagePitchRotation 0" )
             break;
     }
 }
+
+// not fully implemented
+void function SwapToNextYaw(entity player)
+{
+    if (player != GetLocalClientPlayer()) return;
+    switch (file.pitch)
+    {
+        case 0:
+            file.pitch = 30
+            player.ClientCommand( "ChagePitchRotation 30" )
+            break;
+        case 30:
+            file.pitch = 35
+            player.ClientCommand( "ChagePitchRotation 35" )
+            break;
+        case 35:
+            file.pitch = 45
+            player.ClientCommand( "ChagePitchRotation 45" )
+            break;
+        case 45:
+        default:
+            file.pitch = 0
+            player.ClientCommand( "ChagePitchRotation 0" )
+            break;
+    }
+}
+
 bool function ClientCommand_UP_Client(entity player)
 {
     GetLocalClientPlayer().ClientCommand("moveUp")

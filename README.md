@@ -13,8 +13,8 @@ If you have any bugs, suggestions, or questions, create an issue at the [R5Edit 
 4. Press q (your tactical button) to equip the tool
 
 ### Using the tool:
-* Set the rotate and snap binds by running `bind "3" "+scriptCommand6"; bind "4" "+scriptCommand1"` in the console
-    * Change 3 and 4 to your key of choice
+* Set the rotate and snap binds by running `bind "j" "+scriptCommand1"; bind "k" "+scriptCommand6"; bind "l" "+offhand3"` in the console
+    * You can change j, k, and l to keys of your choice
 * If you use toggle zoom, you need to bind something to hold aim to change props
 * Press b (change fire mode) to enter delete mode
 
