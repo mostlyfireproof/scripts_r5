@@ -23,3 +23,7 @@ If you have any bugs, suggestions, or questions, create an issue at the [R5Edit 
 * [To save and load, use the tool and follow the instructions here](https://github.com/mostlyfireproof/R5Edit)
 * __PLEASE SAVE FREQUENTLY__, as the game can and will crash at the worst possible time
 * To use the map when hosting, copy the `mp_rr_<map>_common.nut` somewhere else (like your desktop), install the scripts with which you will host, then copy it back in
+
+### Known Issues:
+* You can't go in to the prop menu when the zipline is equipped (unintended feature)
+* Doesn't work on KC S2

@@ -28,11 +28,13 @@ struct {
     #if SERVER
     table<entity, float> snapSizes
     table<entity, float> pitches
+    table<entity, float> yaws
     table<entity, float> offsets
     array<entity> allProps
     #elseif CLIENT
     float snapSize = 64
     float pitch = 0
+    float yaw = 0
     #endif
 } file
 #if SERVER
@@ -85,6 +87,7 @@ EditorMode function EditorModePlace_Init()
     AddClientCommandCallback("moveDown", ClientCommand_DOWN_Server )
     AddClientCommandCallback( "ChangeSnapSize", ChangeSnapSize)
     AddClientCommandCallback( "ChagePitchRotation", ChagePitchRotation)
+    AddClientCommandCallback( "ChageYawRotation", ChageYawRotation)
     #endif
 
 
@@ -102,7 +105,7 @@ void function EditorModePlace_Activation(entity player)
     AddInputHint( "%zoom%", "Switch Prop")
     AddInputHint( "%scriptCommand1%", "Change Snap Size" )
     AddInputHint( "%scriptCommand6%", "Change Pitch" )
-    AddInputHint( "%offhand3%", "Change Yaw" ) // no more gun shield or chat on controller because of this
+    AddInputHint( "%offhand3%", "Change Yaw" ) // no calling in a titanfall because of this
     AddInputHint( "%weaponSelectPrimary0%", "Raise" )
     AddInputHint( "%weaponSelectPrimary1%", "Lower" )
     AddInputHint( "%offhand4%", "Open Model Menu" )
@@ -125,6 +128,10 @@ void function EditorModePlace_Activation(entity player)
     if( !(player in file.pitches) )
     {
         file.pitches[player] <- 0
+    }
+    if( !(player in file.yaws) )
+    {
+        file.yaws[player] <- 0
     }
     if( !(player in file.offsets) )
     {
@@ -356,8 +363,10 @@ void function PlaceProxyThink(entity player)
         angles.y = floor(smartClamp(angles.y - 45, -360, 360) / 90) * 90
         #if CLIENT
         angles.z += file.pitch
+        angles.y += file.yaw
         #elseif SERVER
         angles.z += file.pitches[player]
+        angles.y += file.yaws[player]
         #endif
 
         GetProp(player).SetOrigin( origin )
@@ -442,7 +451,22 @@ bool function ChagePitchRotation( entity player, array<string> args )
 
     return true
 }
+
+bool function ChageYawRotation( entity player, array<string> args )
+{
+    if (args[0] == "") return true
+    
+    printl(args[0].tofloat())
+    if( !(player in file.yaws) )
+    {
+        file.yaws[player] <- args[0].tofloat()
+    }
+    file.yaws[player] = args[0].tofloat()
+
+    return true
+}
 #elseif CLIENT
+
 void function SwapToNextSnapSize(entity player)
 {
     if (player != GetLocalClientPlayer()) return;
@@ -496,24 +520,32 @@ void function SwapToNextPitch(entity player)
 void function SwapToNextYaw(entity player)
 {
     if (player != GetLocalClientPlayer()) return;
-    switch (file.pitch)
+    switch (file.yaw)
     {
         case 0:
-            file.pitch = 30
-            player.ClientCommand( "ChagePitchRotation 30" )
+            file.yaw = 15
+            player.ClientCommand( "ChageYawRotation 15" )
+            break;
+        case 15:
+            file.yaw = 30
+            player.ClientCommand( "ChageYawRotation 30" )
             break;
         case 30:
-            file.pitch = 35
-            player.ClientCommand( "ChagePitchRotation 35" )
-            break;
-        case 35:
-            file.pitch = 45
-            player.ClientCommand( "ChagePitchRotation 45" )
+            file.yaw = 45
+            player.ClientCommand( "ChageYawRotation 45" )
             break;
         case 45:
+            file.yaw = 60
+            player.ClientCommand( "ChageYawRotation 60" )
+            break;
+        case 60:
+            file.yaw = 75
+            player.ClientCommand( "ChageYawRotation 75" )
+            break;
+        case 75:
         default:
-            file.pitch = 0
-            player.ClientCommand( "ChagePitchRotation 0" )
+            file.yaw = 0
+            player.ClientCommand( "ChageYawRotation 0" )
             break;
     }
 }
