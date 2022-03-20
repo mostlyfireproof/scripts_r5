@@ -26,4 +26,4 @@ If you have any bugs, suggestions, or questions, create an issue at the [R5Edit 
 
 ### Known Issues:
 * You can't go in to the prop menu when the zipline is equipped (unintended feature)
-* Doesn't work on KC S2
+* Doesn't work on KC S2 or Ash's Redemption
