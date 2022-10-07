@@ -27,6 +27,7 @@ struct
     // store the props here for saving and loading
     array<entity> allProps
     array<EditorMode> editorModes
+    array<var> inputHintRuis
 
     #if CLIENT
     var rui
@@ -44,8 +45,6 @@ void function MpWeaponEditor_Init()
     RegisterEditorMode(EditorModeDelete_Init())
     RegisterEditorMode(EditorModeToys_Init())
 
-
-
     AddCallback_OnPlayerAddWeaponMod(CycleWeaponMode)
     AddCallback_OnPlayerRemoveWeaponMod(CycleWeaponMode)
 
@@ -61,7 +60,6 @@ void function MpWeaponEditor_Init()
 void function RegisterEditorMode(EditorMode mode)
 {
     file.editorModes.append(mode)
-
 }
 
 array<EditorMode> function GetEditorModes()
@@ -115,7 +113,7 @@ void function OnWeaponActivate_weapon_editor( entity weapon )
     #if CLIENT
     if (weapon.GetOwner() != GetLocalClientPlayer()) return
     entity player = GetLocalClientPlayer()
-
+    
     
     RegisterConCommandTriggeredCallback("+use_alt", OpenEditorModeSelector)
     RegisterConCommandTriggeredCallback("-use_alt", CloseEditorModeSelector)
@@ -189,7 +187,15 @@ var function OnWeaponPrimaryAttack_weapon_editor( entity weapon, WeaponPrimaryAt
 
 void function OnWeaponOwnerChanged_weapon_editor( entity weapon, WeaponOwnerChangedParams changeParams )
 {
-	
+    #if CLIENT
+    foreach( rui in startEditorRUIs )
+    {
+        RuiDestroy( rui )
+    }
+    startEditorRUIs.clear()
+    #endif
+
+    AddActivatePropToolHint()
 }
 
 void function CycleWeaponMode( entity player, entity weapon, string mod )
@@ -224,6 +230,28 @@ bool function OnWeaponAttemptOffhandSwitch_weapon_editor( entity weapon )
 
     return true //currAmmo >= ammoReq
 }
+
+void function AddInputHint( string buttonText, string hintText)
+{
+
+    #if CLIENT
+    var hintRui = CreateFullscreenRui( $"ui/tutorial_hint_line.rpak" )
+
+	RuiSetString( hintRui, "buttonText", buttonText )
+	// RuiSetString( hintRui, "gamepadButtonText", gamePadButtonText )
+	RuiSetString( hintRui, "hintText", hintText )
+	// RuiSetString( hintRui, "altHintText", altHintText )
+	RuiSetInt( hintRui, "hintOffset", 0 )
+	// RuiSetBool( hintRui, "hideWithMenus", false )
+
+    startEditorRUIs.append(hintRui)
+
+    #endif
+}
+
+
+
+
 
 
 
@@ -411,3 +439,9 @@ void function UpdateRUI(entity player) {
     RuiSetString( file.rui,"messageText", currIndex + "/" + max + " | " + currentAsset);
 }
 #endif
+
+void function AddActivatePropToolHint()
+{
+	AddInputHint( "%V%", "Activate Editor Mode" )
+}
+

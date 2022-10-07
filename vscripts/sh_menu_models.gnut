@@ -18,7 +18,7 @@ const asset SHADOW_TRAIL_FX = $"P_Bshadow_body"
 const asset SHADOW_EYE_FX = $"P_BShadow_eye"
 
 
-const vector MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR = <102, 120, 242>
+const vector MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR = <50, 50, 50>
 
 const vector PLAYER_INFO_OFFSET = <0, 0, 74>
 
@@ -2544,9 +2544,9 @@ void function TransitionTest( entity model, vector color, bool doTransitionFX, b
 	{
 		// PROTO_HighlightTest( model, ItemFlavor_GetQualityColor( expect ItemFlavor( clGlobal.previewMenuPilotModels.characterSkin ) ) )
 		float fillIntensityScalar    = 10
-		float outlineIntensityScalar = 300
+		float outlineIntensityScalar = 100
 		float fadeInTime             = 0.01
-		float fadeOutTime            = (doTransitionFX ? 0.5 : 0.5)
+		float fadeOutTime            = (doTransitionFX ? 0.2 : 0.2)
 		float lifeTime               = 0.1
 		float ditherDelay            = 0.15
 		float ditherDuration         = 0.2
