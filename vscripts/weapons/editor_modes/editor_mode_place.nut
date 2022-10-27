@@ -1,6 +1,8 @@
 global function EditorModePlace_Init
 
 global function ServerCallback_NextProp
+global function ServerCallback_PreviousProp
+global function ServerCallback_ResetProp
 global function ServerCallback_OpenModelMenu
 #if SERVER
 global function GetPlacedProps
@@ -29,12 +31,14 @@ struct {
     table<entity, float> snapSizes
     table<entity, float> pitches
     table<entity, float> yaws
+    table<entity, float> rolls
     table<entity, float> offsets
     array<entity> allProps
     #elseif CLIENT
-    float snapSize = 64
+    float snapSize = 4
     float pitch = 0
     float yaw = 0
+    float roll = 0
     #endif
 } file
 #if SERVER
@@ -49,7 +53,7 @@ EditorMode function EditorModePlace_Init()
 
     EditorMode mode
 
-    mode.displayName = "Individual Place"
+    mode.displayName = "Place"
     mode.description = "Place props one by one"
     
     mode.onActivationCallback = EditorModePlace_Activation
@@ -74,6 +78,8 @@ EditorMode function EditorModePlace_Init()
     AddClientCommandCallback("load", ClientCommand_Load)
     AddClientCommandCallback("spawnpoint", ClientCommand_Spawnpoint)
     AddClientCommandCallback("nextprop", ClientCommand_Next)
+    AddClientCommandCallback("previousprop", ClientCommand_Previous) 
+    AddClientCommandCallback("resetprop", ClientCommand_Reset)  
     AddClientCommandCallback("section", ClientCommand_Section)
     #endif
 
@@ -83,11 +89,12 @@ EditorMode function EditorModePlace_Init()
     //RegisterConCommandTriggeredCallback( "weaponSelectPrimary0", ClientCommand_UP_Client )
     //RegisterConCommandTriggeredCallback( "weaponSelectPrimary1", ClientCommand_DOWN_Client )
     #elseif SERVER
-    AddClientCommandCallback("moveUp", ClientCommand_UP_Server )
-    AddClientCommandCallback("moveDown", ClientCommand_DOWN_Server )
-    AddClientCommandCallback( "ChangeSnapSize", ChangeSnapSize)
-    AddClientCommandCallback( "ChagePitchRotation", ChagePitchRotation)
-    AddClientCommandCallback( "ChageYawRotation", ChageYawRotation)
+    AddClientCommandCallback( "moveUp", ClientCommand_UP_Server )
+    AddClientCommandCallback( "moveDown", ClientCommand_DOWN_Server )
+    AddClientCommandCallback( "ChangeSnapSize", ChangeSnapSize )
+    AddClientCommandCallback( "ChangePitchRotation", ChangePitchRotation )
+    AddClientCommandCallback( "ChangeYawRotation", ChangeYawRotation )
+    AddClientCommandCallback( "ChangeRollRotation", ChangeRollRotation )
     #endif
 
 
@@ -100,30 +107,54 @@ EditorMode function EditorModePlace_Init()
 }
 
 void function EditorModePlace_Activation(entity player)
-{
-    AddInputHint( "%attack%", "Place Prop" )
-    AddInputHint( "%zoom%", "Switch Prop")
-    AddInputHint( "%scriptCommand1%", "Change Snap Size" )
-    AddInputHint( "%scriptCommand6%", "Change Pitch" )
-    AddInputHint( "%offhand3%", "Change Yaw" ) // no calling in a titanfall because of this
-    AddInputHint( "%weaponSelectPrimary0%", "Raise" )
-    AddInputHint( "%weaponSelectPrimary1%", "Lower" )
-    AddInputHint( "%offhand4%", "Open Model Menu" )
+{   
+    #if CLIENT
+    foreach( rui in startEditorRUIs )
+    {
+        RuiDestroy( rui )
+    }
+    startEditorRUIs.clear()
+    #endif
 
+    AddInputHint( "%B%", "Change Editor Mode" )
+    AddInputHint( "%T%", "Change Perspective" )
+    AddInputHint( "%F%", "NoClip")  
+    AddInputHint( "%G%", "Zipline")
+    AddInputHint( "", "")
+    AddInputHint( "%attack%", "Place Prop" )
+    AddInputHint( "%E%", "Next Prop")
+    AddInputHint( "%Q%", "Previous Prop")
+    AddInputHint( "%1%", "Raise" )
+    AddInputHint( "%2%", "Lower" )
+    AddInputHint( "%3%", "Change Yaw (z)" )
+    AddInputHint( "%4%", "Change Pitch (y)" )
+    AddInputHint( "%5%", "Change Roll (x)" )
+    AddInputHint( "%R%", "Reset Prop Positions (x,y,z)" )
+    AddInputHint( "%6%", "Change Snap Size" ) // no calling in a titanfall because of this
+    AddInputHint( "%Z%", "Open Model Menu" )   
+    
     #if CLIENT
     
-    RegisterConCommandTriggeredCallback( "+scriptCommand1", SwapToNextSnapSize )
-    RegisterConCommandTriggeredCallback( "+scriptCommand6", SwapToNextPitch )
-    RegisterConCommandTriggeredCallback( "+offhand3", SwapToNextYaw )
+    //RegisterConCommandTriggeredCallback( "+use", ServerCallback_NextProp)
+    //RegisterConCommandTriggeredCallback( "+reload", ServerCallback_PreviousProp)
+    RegisterConCommandTriggeredCallback( "+pushtotalk", ServerCallback_ResetProp)
     RegisterConCommandTriggeredCallback( "weaponSelectPrimary0", ClientCommand_UP_Client )
     RegisterConCommandTriggeredCallback( "weaponSelectPrimary1", ClientCommand_DOWN_Client )
-    RegisterConCommandTriggeredCallback( "+offhand4", ServerCallback_OpenModelMenu )
+    RegisterConCommandTriggeredCallback( "+scriptCommand6", SwapToNextRoll )
+    RegisterConCommandTriggeredCallback( "+scriptCommand1", SwapToNextPitch )
+    RegisterConCommandTriggeredCallback( "weapon_inspect", SwapToNextYaw )
+    RegisterConCommandTriggeredCallback( "+offhand3", SwapToNextSnapSize )
+    RegisterConCommandTriggeredCallback( "weaponSelectOrdnance", ServerCallback_OpenModelMenu )
 
     #elseif SERVER
-    AddButtonPressedPlayerInputCallback( player, IN_ZOOM, ServerCallback_NextProp )
+
+    AddButtonPressedPlayerInputCallback( player, IN_USE, ServerCallback_NextProp )
+    AddButtonPressedPlayerInputCallback( player, IN_RELOAD, ServerCallback_PreviousProp )
+    //AddButtonPressedPlayerInputCallback( player, IN_MELEE, ServerCallback_ResetProp )
+    
     if( !(player in file.snapSizes) )
     {
-        file.snapSizes[player] <- 64
+        file.snapSizes[player] <- 4
     }
     if( !(player in file.pitches) )
     {
@@ -132,6 +163,14 @@ void function EditorModePlace_Activation(entity player)
     if( !(player in file.yaws) )
     {
         file.yaws[player] <- 0
+    }
+    if( !(player in file.offsets) )
+    {
+        file.offsets[player] <- 0
+    }
+    if( !(player in file.rolls) )
+    {
+        file.rolls[player] <- 0
     }
     if( !(player in file.offsets) )
     {
@@ -154,14 +193,26 @@ void function EditorModePlace_Deactivation(entity player)
     // deregister here so no errors. 
     // we're also deregistering so we don't change the z offset while we are doing something else e.g. playtesting.
     // should also use +scriptCommands. Seriously.
+
+    //DeregisterConCommandTriggeredCallback( "+use", ServerCallback_NextProp)
+    //DeregisterConCommandTriggeredCallback( "+reload", ServerCallback_PreviousProp)
+    DeregisterConCommandTriggeredCallback( "+pushtotalk", ServerCallback_ResetProp)
     DeregisterConCommandTriggeredCallback( "weaponSelectPrimary0", ClientCommand_UP_Client )
     DeregisterConCommandTriggeredCallback( "weaponSelectPrimary1", ClientCommand_DOWN_Client )
-    DeregisterConCommandTriggeredCallback( "+scriptCommand1", SwapToNextSnapSize )
-    DeregisterConCommandTriggeredCallback( "+scriptCommand6", SwapToNextPitch )
-    DeregisterConCommandTriggeredCallback( "+offhand3", SwapToNextYaw )
-    DeregisterConCommandTriggeredCallback( "+offhand4",  ServerCallback_OpenModelMenu )
+    DeregisterConCommandTriggeredCallback( "+scriptCommand6", SwapToNextRoll )
+    DeregisterConCommandTriggeredCallback( "+scriptCommand1", SwapToNextPitch )
+    DeregisterConCommandTriggeredCallback( "weapon_inspect", SwapToNextYaw ) 
+    DeregisterConCommandTriggeredCallback( "+offhand3", SwapToNextSnapSize )
+    DeregisterConCommandTriggeredCallback( "weaponSelectOrdnance",  ServerCallback_OpenModelMenu )
+
+    AddActivatePropToolHint()
+
     #elseif SERVER
-    RemoveButtonPressedPlayerInputCallback( player, IN_ZOOM, ServerCallback_NextProp )
+
+    RemoveButtonPressedPlayerInputCallback( player, IN_USE, ServerCallback_NextProp )
+    RemoveButtonPressedPlayerInputCallback( player, IN_RELOAD, ServerCallback_PreviousProp )
+    //RemoveButtonPressedPlayerInputCallback( player, IN_MELEE, ServerCallback_ResetProp )
+
     #endif
     if(IsValid(GetProp(player)))
     {
@@ -246,6 +297,69 @@ void function ServerCallback_NextProp( entity player )
     #endif
 }
 
+void function ServerCallback_PreviousProp( entity player )
+{
+    #if CLIENT
+    if(player != GetLocalClientPlayer()) return;
+    player = GetLocalClientPlayer()
+    #endif
+
+    if(!IsValid( player )) return
+    if(!IsAlive( player )) return
+
+    int max = GetAssets()[player.p.selectedProp.section].len()
+    if (player.p.selectedProp.index - 1 < 0) {
+        player.p.selectedProp.index = max - 1
+    } else {
+        player.p.selectedProp.index--
+    }
+
+    #if CLIENT
+    UpdateRUI(player)
+    #endif
+
+    #if SERVER
+        Remote_CallFunction_Replay( player, "ServerCallback_PreviousProp", player )
+    #endif
+}
+
+void function ServerCallback_ResetProp( entity player )
+{
+    #if CLIENT
+    if (player != GetLocalClientPlayer()) return;
+    switch (file.pitch)
+    {
+            default:
+            file.pitch = 0
+            player.ClientCommand( "ChangePitchRotation 0" )
+            break;  
+    }
+    #endif
+
+    #if CLIENT
+    if (player != GetLocalClientPlayer()) return;
+    switch (file.yaw)
+    {
+            default:
+            file.yaw = 0
+            player.ClientCommand( "ChangeYawRotation 0" )
+            break;  
+    }
+    #endif
+
+    #if CLIENT
+    if (player != GetLocalClientPlayer()) return;
+    switch (file.roll)
+    {
+            default:
+            file.roll = 0
+            player.ClientCommand( "ChangeRollRotation 0" )
+            break;  
+    }
+    #endif
+}
+
+
 
 void function StartNewPropPlacement(entity player)
 {
@@ -261,7 +375,7 @@ void function StartNewPropPlacement(entity player)
     
 	GetProp(player).kv.renderamt = 255
 	GetProp(player).kv.rendermode = 3
-	GetProp(player).kv.rendercolor = "255 255 255 150"
+	GetProp(player).kv.rendercolor = "255 255 255 255"
 
     #endif
 
@@ -295,6 +409,7 @@ void function PlaceProp(entity player)
     #endif
 }
 
+int counter = 0
 void function PlaceProxyThink(entity player)
 {
     float gridSize = 256
@@ -343,7 +458,7 @@ void function PlaceProxyThink(entity player)
             return val
         }
 
-        ang.x = 0
+        ang.x = floor(smartClamp(ang.x + 45, -360, 360) / 90) * 90
         ang.y = floor(smartClamp(ang.y + 45, -360, 360) / 90) * 90
         ang.z = floor(smartClamp(ang.z + 45, -360, 360) / 90) * 90
 
@@ -360,19 +475,22 @@ void function PlaceProxyThink(entity player)
 
         vector angles = VectorToAngles( -1 * player.GetViewVector() )
         angles.x = GetProp(player).GetAngles().x
+        angles.x = 0
         angles.y = floor(smartClamp(angles.y - 45, -360, 360) / 90) * 90
         #if CLIENT
-        angles.z += file.pitch
-        angles.y += file.yaw
+        angles.z = (angles.z + file.pitch) % 360
+        angles.y = (angles.y + file.yaw) % 360
+        angles.x = (angles.x + file.roll) % 360
         #elseif SERVER
-        angles.z += file.pitches[player]
-        angles.y += file.yaws[player]
+        angles.z = (angles.z + file.pitches[player]) % 360
+        angles.y = (angles.y + file.yaws[player]) % 360
+        angles.x = (angles.x + file.rolls[player]) % 360
         #endif
 
         GetProp(player).SetOrigin( origin )
         GetProp(player).SetAngles( angles )
 
-        wait 0.1
+        wait 0.01
     }
 }
 
@@ -403,14 +521,14 @@ PropInfo function NewPropInfo(string section, int index)
 #if SERVER
 bool function ClientCommand_UP_Server(entity player, array<string> args)
 {
-    file.offsets[player] += 64
+    file.offsets[player] += 32
     printl("moving up " + file.offsets[player])
     return true
 }
 
 bool function ClientCommand_DOWN_Server(entity player, array<string> args)
 {
-    file.offsets[player] -= 64
+    file.offsets[player] -= 32
     printl("moving down " + file.offsets[player])
     return true
 }
@@ -438,7 +556,7 @@ bool function ClientCommand_Section(entity player, array<string> args) {
     return false
 }
 
-bool function ChagePitchRotation( entity player, array<string> args )
+bool function ChangePitchRotation( entity player, array<string> args )
 {
     if (args[0] == "") return true
     
@@ -452,7 +570,7 @@ bool function ChagePitchRotation( entity player, array<string> args )
     return true
 }
 
-bool function ChageYawRotation( entity player, array<string> args )
+bool function ChangeYawRotation( entity player, array<string> args )
 {
     if (args[0] == "") return true
     
@@ -465,6 +583,20 @@ bool function ChageYawRotation( entity player, array<string> args )
 
     return true
 }
+
+bool function ChangeRollRotation( entity player, array<string> args )
+{
+    if (args[0] == "") return true
+    
+    printl(args[0].tofloat())
+    if( !(player in file.rolls) )
+    {
+        file.rolls[player] <- args[0].tofloat()
+    }
+    file.rolls[player] = args[0].tofloat()
+
+    return true
+}
 #elseif CLIENT
 
 void function SwapToNextSnapSize(entity player)
@@ -472,6 +604,10 @@ void function SwapToNextSnapSize(entity player)
     if (player != GetLocalClientPlayer()) return;
     switch (file.snapSize)
     {
+        case 4:
+            file.snapSize = 64
+            player.ClientCommand( "ChangeSnapSize 64" )
+            break;
         case 64:
             file.snapSize = 128
             player.ClientCommand( "ChangeSnapSize 128" )
@@ -480,13 +616,9 @@ void function SwapToNextSnapSize(entity player)
             file.snapSize = 256
             player.ClientCommand( "ChangeSnapSize 256" )
             break;
-        case 256:
+        default:
             file.snapSize = 4
             player.ClientCommand( "ChangeSnapSize 4" )
-            break;
-        default:
-            file.snapSize = 64
-            player.ClientCommand( "ChangeSnapSize 64" )
             break;
     }
 }
@@ -497,21 +629,101 @@ void function SwapToNextPitch(entity player)
     switch (file.pitch)
     {
         case 0:
+            file.pitch = 15
+            player.ClientCommand( "ChangePitchRotation 15" )
+            break;
+        case 15:
             file.pitch = 30
-            player.ClientCommand( "ChagePitchRotation 30" )
+            player.ClientCommand( "ChangePitchRotation 30" )
             break;
         case 30:
-            file.pitch = 35
-            player.ClientCommand( "ChagePitchRotation 35" )
-            break;
-        case 35:
             file.pitch = 45
-            player.ClientCommand( "ChagePitchRotation 45" )
+            player.ClientCommand( "ChangePitchRotation 45" )
             break;
         case 45:
-        default:
+            file.pitch = 60
+            player.ClientCommand( "ChangePitchRotation 60" )
+            break;
+        case 60:
+            file.pitch = 75
+            player.ClientCommand( "ChangePitchRotation 75" )
+            break;
+        case 75:
+        file.pitch = 90
+            player.ClientCommand( "ChangePitchRotation 90" )
+            break;
+        case 90:
+            file.pitch = 105
+            player.ClientCommand( "ChangePitchRotation 105" )
+            break;
+        case 105:
+            file.pitch = 120
+            player.ClientCommand( "ChangePitchRotation 120" )
+            break;
+        case 120:
+            file.pitch = 135
+            player.ClientCommand( "ChangePitchRotation 135" )
+            break;
+        case 135:
+            file.pitch = 150
+            player.ClientCommand( "ChangePitchRotation 150" )
+            break;
+        case 150:
+            file.pitch = 165
+            player.ClientCommand( "ChangePitchRotation 165" )
+            break;
+        case 165:
+            file.pitch = 180
+            player.ClientCommand( "ChangePitchRotation 180" )
+            break;
+        case 180:
+            file.pitch = 195
+            player.ClientCommand( "ChangePitchRotation 195" )
+            break;
+        case 195:
+            file.pitch = 210
+            player.ClientCommand( "ChangePitchRotation 210" )
+            break;
+        case 210:
+            file.pitch = 225
+            player.ClientCommand( "ChangePitchRotation 225" )
+            break;
+        case 225:
+            file.pitch = 240
+            player.ClientCommand( "ChangePitchRotation 240" )
+            break;
+        case 240:
+            file.pitch = 255
+            player.ClientCommand( "ChangePitchRotation 255" )
+            break;
+        case 255:
+            file.pitch = 270
+            player.ClientCommand( "ChangePitchRotation 270" )
+            break;
+        case 270:
+            file.pitch = 285
+            player.ClientCommand( "ChangePitchRotation 285" )
+            break;
+        case 285:
+            file.pitch = 300
+            player.ClientCommand( "ChangePitchRotation 300" )
+            break;
+        case 300:
+            file.pitch = 315
+            player.ClientCommand( "ChangePitchRotation 315" )
+            break;
+        case 315:
+            file.pitch = 330
+            player.ClientCommand( "ChangePitchRotation 330" )
+            break;
+        case 330:
+            file.pitch = 345
+            player.ClientCommand( "ChangePitchRotation 345" )
+            break;
+        case 345:
+            default:
             file.pitch = 0
-            player.ClientCommand( "ChagePitchRotation 0" )
+            player.ClientCommand( "ChangePitchRotation 0" )
             break;
     }
 }
@@ -524,28 +736,205 @@ void function SwapToNextYaw(entity player)
     {
         case 0:
             file.yaw = 15
-            player.ClientCommand( "ChageYawRotation 15" )
+            player.ClientCommand( "ChangeYawRotation 15" )
             break;
         case 15:
             file.yaw = 30
-            player.ClientCommand( "ChageYawRotation 30" )
+            player.ClientCommand( "ChangeYawRotation 30" )
             break;
         case 30:
             file.yaw = 45
-            player.ClientCommand( "ChageYawRotation 45" )
+            player.ClientCommand( "ChangeYawRotation 45" )
             break;
         case 45:
             file.yaw = 60
-            player.ClientCommand( "ChageYawRotation 60" )
+            player.ClientCommand( "ChangeYawRotation 60" )
             break;
         case 60:
             file.yaw = 75
-            player.ClientCommand( "ChageYawRotation 75" )
+            player.ClientCommand( "ChangeYawRotation 75" )
             break;
         case 75:
-        default:
+            file.yaw = 90
+            player.ClientCommand( "ChangeYawRotation 90" )
+            break;
+        case 90:
+            file.yaw = 105
+            player.ClientCommand( "ChangeYawRotation 105" )
+            break;
+        case 105:
+            file.yaw = 120
+            player.ClientCommand( "ChangeYawRotation 120" )
+            break;
+        case 120:
+            file.yaw = 135
+            player.ClientCommand( "ChangeYawRotation 135" )
+            break;
+        case 135:
+            file.yaw = 150
+            player.ClientCommand( "ChangeYawRotation 150" )
+            break;
+        case 150:
+            file.yaw = 165
+            player.ClientCommand( "ChangeYawRotation 165" )
+            break;
+        case 165:
+            file.yaw = 180
+            player.ClientCommand( "ChangeYawRotation 180" )
+            break;
+        case 180:
+            file.yaw = 195
+            player.ClientCommand( "ChangeYawRotation 195" )
+            break;
+        case 195:
+            file.yaw = 210
+            player.ClientCommand( "ChangeYawRotation 210" )
+            break;
+        case 210:
+            file.yaw = 225
+            player.ClientCommand( "ChangeYawRotation 225" )
+            break;
+        case 225:
+            file.yaw = 240
+            player.ClientCommand( "ChangeYawRotation 240" )
+            break;
+        case 240:
+            file.yaw = 255
+            player.ClientCommand( "ChangeYawRotation 255" )
+            break;
+        case 255:
+            file.yaw = 270
+            player.ClientCommand( "ChangeYawRotation 270" )
+            break;
+        case 270:
+            file.yaw = 285
+            player.ClientCommand( "ChangeYawRotation 285" )
+            break;
+        case 285:
+            file.yaw = 300
+            player.ClientCommand( "ChangeYawRotation 300" )
+            break;
+        case 300:
+            file.yaw = 315
+            player.ClientCommand( "ChangeYawRotation 315" )
+            break;
+        case 315:
+            file.yaw = 330
+            player.ClientCommand( "ChangeYawRotation 330" )
+            break;
+        case 330:
+            file.yaw = 345
+            player.ClientCommand( "ChangeYawRotation 345" )
+            break;
+        case 345:
+            default:
             file.yaw = 0
-            player.ClientCommand( "ChageYawRotation 0" )
+            player.ClientCommand( "ChangeYawRotation 0" )
+            break;
+    }
+}
+
+void function SwapToNextRoll(entity player)
+{
+    if (player != GetLocalClientPlayer()) return;
+    switch (file.roll)
+    {
+        case 0:
+            file.roll = 15
+            player.ClientCommand( "ChangeRollRotation 15" )
+            break;
+        case 15:
+            file.roll = 30
+            player.ClientCommand( "ChangeRollRotation 30" )
+            break;
+        case 30:
+            file.roll = 45
+            player.ClientCommand( "ChangeRollRotation 45" )
+            break;
+        case 45:
+            file.roll = 60
+            player.ClientCommand( "ChangeRollRotation 60" )
+            break;
+        case 60:
+            file.roll = 75
+            player.ClientCommand( "ChangeRollRotation 75" )
+            break;
+        case 75:
+            file.roll = 90
+            player.ClientCommand( "ChangeRollRotation 90" )
+            break;
+        case 90:
+            file.roll = 105
+            player.ClientCommand( "ChangeRollRotation 105" )
+            break;
+        case 105:
+            file.roll = 120
+            player.ClientCommand( "ChangeRollRotation 120" )
+            break;
+        case 120:
+            file.roll = 135
+            player.ClientCommand( "ChangeRollRotation 135" )
+            break;
+        case 135:
+            file.roll = 150
+            player.ClientCommand( "ChangeRollRotation 150" )
+            break;
+        case 150:
+            file.roll = 165
+            player.ClientCommand( "ChangeRollRotation 165" )
+            break;
+        case 165:
+            file.roll = 180
+            player.ClientCommand( "ChangeRollRotation 180" )
+            break;
+        case 180:
+            file.roll = 195
+            player.ClientCommand( "ChangeRollRotation 195" )
+            break;
+        case 195:
+            file.roll = 210
+            player.ClientCommand( "ChangeRollRotation 210" )
+            break;
+        case 210:
+            file.roll = 225
+            player.ClientCommand( "ChangeRollRotation 225" )
+            break;
+        case 225:
+            file.roll = 240
+            player.ClientCommand( "ChangeRollRotation 240" )
+            break;
+        case 240:
+            file.roll = 255
+            player.ClientCommand( "ChangeRollRotation 255" )
+            break;
+        case 255:
+            file.roll = 270
+            player.ClientCommand( "ChangeRollRotation 270" )
+            break;
+        case 270:
+            file.roll = 285
+            player.ClientCommand( "ChangeRollRotation 285" )
+            break;
+        case 285:
+            file.roll = 300
+            player.ClientCommand( "ChangeRollRotation 300" )
+            break;
+        case 300:
+            file.roll = 315
+            player.ClientCommand( "ChangeRollRotation 315" )
+            break;
+        case 315:
+            file.roll = 330
+            player.ClientCommand( "ChangeRollRotation 330" )
+            break;
+        case 330:
+            file.roll = 345
+            player.ClientCommand( "ChangeRollRotation 345" )
+            break;
+        case 345:
+            default:
+            file.roll = 0
+            player.ClientCommand( "ChangeRollRotation 0" )
             break;
     }
 }
@@ -553,14 +942,14 @@ void function SwapToNextYaw(entity player)
 bool function ClientCommand_UP_Client(entity player)
 {
     GetLocalClientPlayer().ClientCommand("moveUp")
-    file.offsetZ += 64
+    file.offsetZ += 32
     return true
 }
 
 bool function ClientCommand_DOWN_Client(entity player)
 {
     GetLocalClientPlayer().ClientCommand("moveDown")
-    file.offsetZ -= 64
+    file.offsetZ -= 32
     return true
 }
 #endif
@@ -656,6 +1045,18 @@ bool function ClientCommand_Spawnpoint(entity player, array<string> args) {
 bool function ClientCommand_Next(entity player, array<string> args) {
     ServerCallback_NextProp(player)
     //Remote_CallFunction_Replay( player, "ServerCallback_NextProp", player )
+    return true
+}
+
+bool function ClientCommand_Previous(entity player, array<string> args) {
+    ServerCallback_PreviousProp(player)
+    //Remote_CallFunction_Replay( player, "ServerCallback_PreviousProp", player )
+    return true
+}
+
+bool function ClientCommand_Reset(entity player, array<string> args) {
+    ServerCallback_ResetProp(player)
+    //Remote_CallFunction_Replay( player, "ServerCallback_ResetProp", player )
     return true
 }
 #endif

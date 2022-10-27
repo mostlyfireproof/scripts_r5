@@ -43,9 +43,23 @@ EditorMode function EditorModeDelete_Init()
 
 void function EditorModeDelete_Activation(entity player)
 {
+    #if CLIENT
+    foreach( rui in startEditorRUIs )
+    {
+        RuiDestroy( rui )
+    }
+    startEditorRUIs.clear()
+    #endif
+
+    AddInputHint( "%B%", "Change Editor Mode" )
+    AddInputHint( "%T%", "Change Perspective" )
+    AddInputHint( "%F%", "NoClip")
+    AddInputHint( "%G%", "Zipline")
+    AddInputHint( "", "")
     AddInputHint( "%attack%", "Delete Prop" )
 
     #if CLIENT
+    
     thread EditorModeDelete_Think(player)
     #endif
 }
@@ -111,8 +125,13 @@ void function EditorModeDelete_Think(entity player) {
 
 void function EditorModeDelete_Deactivation(entity player)
 {
+    #if CLIENT
+    AddActivatePropToolHint()
+    #endif
+
     RemoveAllHints()
     Signal(player, "EditorModeDeleteExit")
+    
 }
 
 void function EditorModeDelete_Delete(entity player)

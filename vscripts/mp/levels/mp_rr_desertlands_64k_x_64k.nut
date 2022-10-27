@@ -4,3 +4,4 @@ void function CodeCallback_MapInit()
 {
     Desertlands_MapInit_Common()
 }
+

@@ -103,6 +103,11 @@ global function Dev_AdjustVictorySequence
 global function GetCompassRui
 global function CircleAnnouncementsEnable
 
+global function AddActivatePropToolHint
+global function OnPressX
+global function GetPropToolStartHint
+
+
 global struct NextCircleDisplayCustomData
 {
 	float  circleStartTime
@@ -162,6 +167,8 @@ global const float SAFE_ZONE_ALPHA = 0.05
 global const string HEALTHKIT_BIND_COMMAND = "+scriptCommand2"
 global const string ORDNANCEMENU_BIND_COMMAND = "+strafe"
 
+global array<var> startEditorRUIs = []
+
 struct MinimapLabelStruct
 {
 	string name
@@ -187,7 +194,9 @@ global struct SquadSummaryData
 }
 
 struct
-{
+{		
+	array<var> inputHintRuis
+		
 	var titanLinkProgressRui
 	var dpadMenuRui
 	var pilotRui
@@ -494,7 +503,9 @@ bool function SprintFXAreEnabled()
 
 
 void function OnPlayerCreated( entity player )
-{
+{	
+	GetPropToolStartHint()
+	
 	if ( SprintFXAreEnabled() )
 	{
 		if ( player == GetLocalViewPlayer() )
@@ -4773,4 +4784,50 @@ var function GetCompassRui()
 void function AddCallback_ShouldRunCharacterSelection( bool functionref() func )
 {
 	file.shouldRunCharacterSelectionCallback = func
+}
+
+
+void function AddActivatePropToolHint()
+{
+	AddInputHint( "%V%", "Activate Editor Mode" )
+}
+
+void function OnPressX()
+{	
+	RemoveAllHints()
+	AddActivatePropToolHint()
+}
+
+
+void function AddInputHint( string buttonText, string hintText)
+{
+	#if CLIENT
+    var hintRui = CreateFullscreenRui( $"ui/tutorial_hint_line.rpak" )
+	
+	RuiSetString( hintRui, "buttonText", buttonText )
+	// RuiSetString( hintRui, "gamepadButtonText", gamePadButtonText )
+	RuiSetString( hintRui, "hintText", hintText )
+	// RuiSetString( hintRui, "altHintText", altHintText )
+	RuiSetInt( hintRui, "hintOffset", file.inputHintRuis.len() )
+	// RuiSetBool( hintRui, "hideWithMenus", false )
+
+    startEditorRUIs.append(hintRui)
+
+	#endif
+}
+
+void function RemoveAllHints()
+{
+    #if CLIENT
+    foreach( rui in file.inputHintRuis )
+    {
+        RuiDestroy( rui )
+    }
+    file.inputHintRuis.clear()
+    #endif
+}
+
+void function GetPropToolStartHint()
+{
+	AddInputHint( "%X%", "Get Prop Tool" )
 }

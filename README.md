@@ -1,22 +1,56 @@
-# R5Reloaded In-Game Level Editor
+# Fireproof's Map Editor Tool updated by Korboy
 
-## This tool is in beta. It is not complete. 
-## We do not take responsibility for any mental or physical harm caused by downloading, using, or modifying the level editor.
+![](https://i.imgur.com/Ib3E6qz.png)
 
-If you have any bugs, suggestions, or questions, create an issue at the [R5Edit repo](https://github.com/mostlyfireproof/R5Edit) 
 
 ### Getting started:
-1. Download this repo and replace your current scripts
-    1. back them up first if you have changed anything you want to keep
-2. Load in to a game in debug mode
-3. Press esc or tab, go to the dev menu, select Editor then Start Editing
-4. Press q (your tactical button) to equip the tool
+1. Download this repo and replace your current scripts (back them up first if you have changed anything you want to keep).
+2. Go to:
+    ```
+    C:\Users\%username%\Saved Games\Respawn\Apex_fnf\local
+    ```
+    and make a backup of your `settings.cfg` file.
+3. Launch game in dev mode.
+4. Press ` key to open the console then enter this bind command:
 
-### Using the tool:
-* Set the rotate and snap binds by running `bind "j" "+scriptCommand1"; bind "k" "+scriptCommand6"; bind "l" "+offhand3"` in the console
-    * You can change j, k, and l to keys of your choice
-* If you use toggle zoom, you need to bind something to hold aim to change props
-* Press b (change fire mode) to enter delete mode
+    ```
+        bind X "loadouts_devset character_selection character_pathfinder; ToggleThirdPerson; ToggleHUD; give mp_weapon_editor"; bind V "+offhand1"; bind T "ToggleThirdPerson"; bind F "noclip"; bind Q "+reload"; bind E "+use"; bind 3 "weapon_inspect"; bind 4 "+scriptCommand1"; bind 5 "+scriptCommand6"; bind R "+pushtotalk"; bind 6 "+offhand3"; bind Z "weaponSelectOrdnance"; bind G "+offhand4"
+    ```
+
+    * (Optional) This command is to bind F5 to refresh a map after making a change:
+
+        `bind F5 "changelevel <map>"`
+
+        Replace `<map>` with the actual map's name.
+
+        For example: 
+
+        ```
+        bind F5 "changelevel mp_rr_desertlands_64k_x_64k"
+        ```
+
+        You can also bind other keys to other map names as well.
+
+    (When you are finished using the map editor and want to go back to your regular binds, replace your `settings.cfg` file with the backup you made)
+5. Now press `X` and then `V` to start editing.
+
+### Keybinds:
+* `X` Receive Prop Tool, change legend to Pathfinder, switch to TPP, and disable HUD.
+* `V` Activate Prop Tool.
+* `T` Change perspective mode.
+* `F` Toggle noclip.
+* `G` Zipline (double tap X to unequip)
+* `MOUSE1` Place prop.
+* `E` Cycle to next prop.
+* `Q` Cycle to previous prop.
+* `1` Raise prop.
+* `2` Lower prop.
+* `3` Change Yaw (z).
+* `4` Change Pitch (y).
+* `5` Change Roll (x).
+* `R` Reset Prop Positions (x,y,z)
+* `6` Change snap size.
+* `Z` Open the model menu.
 
 ### Saving and loading:
 * Before you start editing, open the console
@@ -25,5 +59,8 @@ If you have any bugs, suggestions, or questions, create an issue at the [R5Edit 
 * To use the map when hosting, copy the `mp_rr_<map>_common.nut` somewhere else (like your desktop), install the scripts with which you will host, then copy it back in
 
 ### Known Issues:
-* You can't go in to the prop menu when the zipline is equipped (unintended feature)
-* Doesn't work on KC S2 or Ash's Redemption
+* You can't go in to the prop menu when the zipline is equipped (unintended feature).
+* Doesn't work on KC S2 or Ash's Redemption.
+--------------------------------------
+
+### Huge thanks to [M1kep](https://github.com/M1kep) `M͢1ke̵̲ͅp̴͖̙̞#9446`, `mostly fireproof#2095`, and `Bogass#1210` for helping me create these changes.

@@ -31,7 +31,7 @@ npc_dummie_combat
 	traverseCostFactor				2.0
 	minGoalRadius					256
 
-	DefaultModelName				"mdl/humans/class/medium/combat_dummie_medium.rmdl"
+	DefaultModelName				"`mdl/humans/class/medium/combat_dummie_medium.rmdl`"
 
 	DefaultWeapon					"mp_weapon_rspn101"
 	WeaponCapacity					"PilotMainWeapons"

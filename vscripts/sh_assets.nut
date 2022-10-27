@@ -2,10 +2,12 @@ struct {
   table<string, array<asset> > we_assets = {}
   table<string, array<asset> > kc_assets = {}
   table<string, array<asset> > range_assets = {}
+  table<string, array<asset> > default_assets = {}
   // manually written, might not work lmao
   array<string> we_sections = []
   array<string> kc_sections = []
   array<string> range_sections = []
+  array<string> default_sections = []
 } file;
 
 global function GetMapAssets
@@ -22,8 +24,10 @@ global function UpdateUIMap
 
 void function ShAssets_Init() {
 array<asset> base_models = [$"mdl/thunderdome/thunderdome_cage_ceiling_256x256_06.rmdl", $"mdl/thunderdome/thunderdome_cage_wall_256x256_01.rmdl", $"mdl/Humans/class/medium/combat_dummie_medium.rmdl"]
+
 file.we_assets ["mdl/base_models"] <- base_models
 file.kc_assets ["mdl/base_models"] <- base_models
+file.default_assets ["mdl/base_models"] <- base_models
 file.range_assets ["mdl/base_models"] <- base_models
 
 // WORLDS EDGE
@@ -207,6 +211,11 @@ foreach(string key, array<asset> assets in file.kc_assets) {
   file.kc_sections.append(key)
 }
 
+foreach(string key, array<asset> assets in file.default_assets) {
+  printl("DEFAULT SECTION: " + key)
+  file.default_sections.append(key)
+}
+
 foreach(string key, array<asset> assets in file.range_assets) {
   printl("FIRING RANGE SECTION: " + key)
   file.range_sections.append(key)
@@ -234,18 +243,18 @@ table<string, array<asset> > function GetAssets() {
   {
   case "mp_rr_canyonlands_staging":
     return file.range_assets
-  case "mp_rr_canyonlands_mu1":
-  case "mp_rr_canyonlands_mu1_night":
-    return {}
+  // case "mp_rr_canyonlands_mu1":
+  // case "mp_rr_canyonlands_mu1_night":
+  //   return {}
   case "mp_rr_canyonlands_64k_x_64k":
     return file.kc_assets
-  case "mp_lobby":
-    return {}
+  // case "mp_lobby":
+  //   return {}
   case "mp_rr_desertlands_64k_x_64k":
   case "mp_rr_desertlands_64k_x_64k_nx":
     return file.we_assets
   default:
-    return {}
+    return file.default_assets
   }
 
   unreachable
@@ -260,18 +269,18 @@ array<string> function GetSections() {
   {
   case "mp_rr_canyonlands_staging":
       return file.range_sections
-  case "mp_rr_canyonlands_mu1":
-  case "mp_rr_canyonlands_mu1_night":
-    return []
+  // case "mp_rr_canyonlands_mu1":
+  // case "mp_rr_canyonlands_mu1_night":
+  //   return []
   case "mp_rr_canyonlands_64k_x_64k":
     return file.kc_sections
-  case "mp_lobby":
-    return []
+  // case "mp_lobby":
+  //   return []
   case "mp_rr_desertlands_64k_x_64k":
   case "mp_rr_desertlands_64k_x_64k_nx":
     return file.we_sections
   default:
-    return []
+    return file.default_sections
   }
 
   unreachable
@@ -284,20 +293,20 @@ array<string> function GetMapSections(string map) {
   case "mp_rr_canyonlands_staging":
       printl("Returning stat")
       return file.range_sections
-  case "mp_rr_canyonlands_mu1":
-  case "mp_rr_canyonlands_mu1_night":
-    return []
+  // case "mp_rr_canyonlands_mu1":
+  // case "mp_rr_canyonlands_mu1_night":
+  //   return []
   case "mp_rr_canyonlands_64k_x_64k":
   printl("cool")
     return file.kc_sections
-  case "mp_lobby":
-    return []
+  // case "mp_lobby":
+  //   return []
   case "mp_rr_desertlands_64k_x_64k":
   case "mp_rr_desertlands_64k_x_64k_nx":
   printl("REturning Stat")
     return file.we_sections
   default:
-    return []
+    return file.default_sections
   }
 
   unreachable
@@ -329,7 +338,7 @@ table<string, array<asset> > function GetMapAssets(string map) {
     return file.we_assets
   default:
     Assert(false, "No TDM locations found for map!")
-    return {}
+    return file.default_assets
   }
 
   unreachable
