@@ -1,4 +1,4 @@
-# Fireproof's Map Editor Tool updated by Korboy
+# Apex Legends Map Editor
 
 ![](https://i.imgur.com/Ib3E6qz.png)
 
@@ -63,4 +63,9 @@
 * Doesn't work on KC S2 or Ash's Redemption.
 --------------------------------------
 
-### Huge thanks to [M1kep](https://github.com/M1kep) `M͢1ke̵̲ͅp̴͖̙̞#9446`, `mostly fireproof#2095`, and `Bogass#1210` for helping me create these changes.
+### Credits:
+* [Peb](https://github.com/Vysteria)
+* [JANU](https://github.com/EladNLG)
+* [Sal](https://github.com/salcodes1)
+* [Korboy](https://github.com/korboybeats)
+* Shout out to [M1kep](https://github.com/M1kep) and Bogass for help as well
