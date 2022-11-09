@@ -54,6 +54,7 @@
 
 ### Saving and loading:
 * Before you start editing, open the console
+    * To allow the info to print to the console, run `sq_showvmoutput 3`
 * [To save and load, use the tool and follow the instructions here](https://github.com/mostlyfireproof/R5Edit)
 * __PLEASE SAVE FREQUENTLY__, as the game can and will crash at the worst possible time
 * To use the map when hosting, copy the `mp_rr_<map>_common.nut` somewhere else (like your desktop), install the scripts with which you will host, then copy it back in
