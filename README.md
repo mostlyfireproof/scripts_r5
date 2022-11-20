@@ -62,6 +62,7 @@
 ### Known Issues:
 * You can't go in to the prop menu when the zipline is equipped (unintended feature).
 * Doesn't work on KC S2 or Ash's Redemption.
+* If you run in to issues with this version, you can roll back to [this latest working version](https://github.com/mostlyfireproof/scripts_r5/tree/7937d332a1cc8948296addf1df978468e3a86b8e)
 --------------------------------------
 
 ### Credits:
